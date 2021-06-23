@@ -1,3 +1,4 @@
+from django.db.models import fields
 from rest_framework import serializers
 from .models import *
 
@@ -6,10 +7,10 @@ class SchoolSerializer(serializers.ModelSerializer):
         model = School
         fields = ['school']
 
-class LevelSerializer(serializers.ModelSerializer):
+class GradeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Level
-        fields = ['level']
+        model = Grade
+        fields = ['grade']
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,18 +1,20 @@
 from django.db import models
+from django.contrib.auth.models import User
 
-class Level(models.Model):
-    level = models.CharField(max_length=1)
+class Grade(models.Model):
+    grade = models.CharField(max_length=1)
     def __str__(self):
-        return str(self.level)
+        return str(self.grade)
 
 class School(models.Model):
     school = models.CharField(max_length=20)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return str(self.school)
 
 class Student(models.Model):
     student = models.CharField(max_length=20)
-    level = models.ForeignKey(Level, on_delete=models.CASCADE, null=True)
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, null=True)
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
