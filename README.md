@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <h1>Today Progress</h1>
 
 21/6
@@ -127,3 +128,8 @@ POST /api/v1/parent/
 # reade parent
 GET /api/v1/parent/
 
+=======
+# school_project (23/6) 
+* make token for user
+* make update for school
+>>>>>>> c2d8dc261477d55e708951c10bfb795291c8bb3e
