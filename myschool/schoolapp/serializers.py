@@ -5,19 +5,19 @@ from .models import *
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
-        fields = ['school']
+        fields = ['name', 'description']
 
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
-        fields = ['grade']
+        fields = ['name', 'description']
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
-        fields = ['student']
+        fields = ['first_name', 'last_name', 'nick_name']
 
 class ParentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parent
-        fields = ['parent']
+        fields = ['first_name', 'last_name']

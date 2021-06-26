@@ -11,7 +11,7 @@ class APISchool(APIView):
     def get(self,request):
         data = request.GET.dict()
         objs = School.objects.filter(**data)
-        print('====================result', objs)
+        # print('====================result', objs)
         serializer = SchoolSerializer(objs, many=True)
         # print('-----------------------resutl', serializer)
         return Response('success', status=200)
@@ -28,6 +28,11 @@ class APISchool(APIView):
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
+            # print('---------------------result', request.user)
+            # print('--------------------ans', detail)
+            detail.update({
+                'user':request.user.pk
+            })
             serializer = SchoolSerializer(data=detail, many=False)
             if serializer.is_valid():
                 serializer.save()
@@ -39,6 +44,7 @@ class APISchool(APIView):
             # get school of this user
             this_user = request.user
             schools = School.objects.filter(user=this_user)
+            # print('--------------------------ans',School.objects.filter(user=this_user))
             if not schools.exists():
                 return Response('fail', status=400)
 
@@ -67,13 +73,13 @@ class APISchool(APIView):
             #     'province': 'new',
             # }
 
-            return Response('s', status=200)
+            return Response('update success', status=200)
 
 class APIGrade(APIView):
     def get(self, request):
         data = request.GET.dict()
         objs = Grade.objects.filter(**data)
-        print('------------------------result', objs)
+        # print('------------------------result', objs)
         serializer = GradeSerializer(objs, many=True)
         return Response('success', status=200)
     
@@ -89,10 +95,70 @@ class APIGrade(APIView):
             else:
                 return Response(serializer.errors, status=400)
         
-        if act =='update':
-            grades = Grade.objects.filter(grade=data['grade'])
-            if not grades.exist():
-                return ...
+        #grade should not have 'update' --> in fact, it cannot be changed
+        # if act =='update':
+        #     grades = Grade.objects.filter(grade=data['grade'])
+        #     if not grades.exist():
+        #         return ...
         
-            grades.update(**detail)
-            return Response('success', status=201)
+        #     grades.update(**detail)
+        #     return Response('success', status=201)
+
+class APIStudent(APIView):
+    def get (self, request):
+        data = request.GET.dict()
+        objs = Student.objects.filter(**data)
+        serializer = StudentSerializer(objs, many=True)
+        return Response('success', status=200)
+    
+    def post (self, request):
+        data = request.data
+        act = data.get('act')
+        detail = data.get('detail')
+        # print('-----------------result', data)
+        if act == 'create':
+            serialzer = StudentSerializer(data=detail, many=False)
+            if serialzer.is_valid():
+                serialzer.save()
+                return Response('create success', status=200)
+            else:
+                return Response(serialzer.errors, status=400)
+    
+        if act == 'update':
+            this_user = request.user
+            print('-----------------------result')
+            students = Student.objects.filter(user=this_user)
+            if not students.exists():
+                return Response('unable to update', status=400)
+            
+            students.update(**request.data['detail'])
+            return Response('update success', status=200)
+
+
+class APIParent(APIView):
+    def get (self, request):
+        data = request.GET.dict()
+        objs = Parent.objects.filter(**data)
+        serializer = ParentSerializer(objs, many=True)
+        return Response('success',status=200)
+
+    def post(self, request):
+        data = request.data
+        act = data.get('act')
+        detail = data.get('detail')
+        if act == 'create':
+            serializer = ParentSerializer(data=detail, many=False)
+            if serializer.is_valid():
+                serializer.save()
+                return Response('create success', status=200)
+            else:
+                return Response(serializer.errors, status=400)
+        
+        if act == 'update':
+            this_user = request.user
+            parents = Parent.objects.filter(user=this_user)
+            if not parents.exists():
+                return Response('unable to update', status=400)
+            
+            parents.update(**request.data['detail'])
+            return Response('update success', status=200)

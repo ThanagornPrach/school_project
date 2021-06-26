@@ -3,6 +3,8 @@ from django.urls import path
 from django.urls.conf import include
 
 urlpatterns = [
-    path('test1/', APISchool.as_view()),
-    path('test2/', APIGrade.as_view()),
+    path('school/', APISchool.as_view()),
+    path('grade/', APIGrade.as_view()),
+    path('student/', APIStudent.as_view()),
+    path('parent/', APIParent.as_view())
 ]
