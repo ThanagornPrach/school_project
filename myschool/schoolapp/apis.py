@@ -28,8 +28,6 @@ class APISchool(APIView):
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
-            # print('---------------------result', request.user)
-            # print('--------------------ans', detail)
             detail.update({
                 'user':request.user.pk
             })

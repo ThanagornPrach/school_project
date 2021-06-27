@@ -27,7 +27,7 @@ class BasicTest(TestCase):
     #     area = w * h
     #     return area
 
-    @tag('missing_act')
+    @tag('missing_act_school')
     def test_missing_act(self):
         data = {
             'detail': {
@@ -91,9 +91,6 @@ class BasicTest(TestCase):
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        # should we also have this one here?
-        # objs = School.objects.filter(user=self.new_user)
-
     # @tag('missing_update')
     # def test_update_missing_act(self):
     #     data = {
@@ -106,13 +103,18 @@ class BasicTest(TestCase):
     
     @tag('duplicate_create')
     def test_create_duplicate_school(self):
+        obj = School.objects.create(
+            user=self.new_user, 
+            name='school A', 
+            description='description A')
+        
+        detail = {
+            'name': 'school A',
+            'description': 'dedesciptiopn A'
+        }
         data = {
             'act':'create',
-            'detail':{
-                'name':'A',
-                'description': 'description A'
-
-            }
+            'detail': detail
         }
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 400)
@@ -124,6 +126,8 @@ class GradeTest(TestCase):
         self.token = Token.objects.create(user=self.new_user)
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+        self.school = School.objects.create(user=self.new_user, name='school A')
        
         #setup new grade
         Grade.objects.create(
@@ -163,10 +167,14 @@ class GradeTest(TestCase):
     
     @tag('update')
     def test_update_grade(self):
-        obj = Grade.objects.create(name='1', description="description 1", user=self.new_user)
+        obj = Grade.objects.create(
+            name='1', 
+            description="description 1", 
+            school=self.school)
 
         detail = {
             'name': '2',
+            'pk': str(obj.pk),
             'description': 'description 2'
         }
         data = {
@@ -177,15 +185,14 @@ class GradeTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
 
-        objs = Grade.objects.filter(user=self.new_user)
-
         #check updated grade
-        updated_objs = Grade.objects.filter(user=self.new_user, name='2')
+        updated_objs = Grade.objects.filter(pk=obj.pk, name='2', description='description 2')
         self.assertEqual(len(updated_objs), 1)
 
         #check old grade
-        objs = Grade.objects.filter(user=self.new_user, name='1')
+        objs = Grade.objects.filter(pk=obj.pk, name='1', description='description 1')
         self.assertEqual(len(objs), 0)
+    
 
 @tag('student')
 class StudentTest(TestCase):
@@ -196,8 +203,12 @@ class StudentTest(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
 
         self.school = School.objects.create(user=self.new_user, name='school A')
-
         self.grade = Grade.objects.create(school=self.school)
+
+        Student.objects.create(
+            first_name='F1',
+            last_name='L1',
+            nick_name='N1')
     
     @tag('get')
     def test_get_student(self):
@@ -205,31 +216,18 @@ class StudentTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'success')
     
-    @tag('duplicate_create')
-    def test_create_duplicate_student(self):
-        data = {
-            'act': 'create',
-            'detail': {
-                'first_name':'F1',
-                'last_name': 'L1',
-                'nick_name': 'N1'
-            }
-        }
-        response = self.client.post('/api/v1/student/', data, format='json')
-        self.assertEqual(response.status_code, 400)
-    
-    @tag('missing_act')
-    def test_missing_act(self):
-        data = {
-            'detail': {
-                'first_name':'F1',
-                'last_name': 'L1',
-                'nick_name': 'N1'
-            }
-        }
-        response = self.client.post('/api/v1/student', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is requited')
+    # @tag('duplicate_create')
+    # def test_create_duplicate_student(self):
+    #     data = {
+    #         'act': 'create',
+    #         'detail': {
+    #             'first_name':'F1',
+    #             'last_name': 'L1',
+    #             'nick_name': 'N1'
+    #         }
+    #     }
+    #     response = self.client.post('/api/v1/student/', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
     
     @tag('update_student')
     def test_update_student(self):
@@ -255,9 +253,177 @@ class StudentTest(TestCase):
         self.assertEqual(response.data, 'update success')
 
 
-        updated_objs = Student.objects.filter(
-            pk=obj.pk, first_name='F2', last_name='L2', nick_name='N2')
+        updated_objs = Student.objects.filter(pk=obj.pk, first_name='F2', last_name='L2', nick_name='N2')
         self.assertEqual(len(updated_objs), 1)
 
         objs = Student.objects.filter(pk=obj.pk, first_name='F1', last_name='L1', nick_name='N1')
         self.assertEqual(len(objs), 0)
+
+    @tag('duplicate_update_student')
+    def test_duplicate_update_student(self):
+        obj = Student.objects.create(
+            first_name='F1',
+            last_name='L1',
+            nick_name='N1',
+            grade = self.grade
+        )
+
+        detail = {
+            'first_name': 'F1',
+            'last_name': 'L1',
+            'nick_name': 'N1'
+        }
+        data = {
+            'act': 'update',
+            'pk': str(obj.pk),
+            'detail': detail
+        }
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    @tag('missing_act')
+    def test_missing_act(self):
+        data = {
+            'detail': {
+                'first_name':'F1',
+                'last_name': 'L1',
+                'nick_name': 'N1'
+            }
+        }
+        response = self.client.post('/api/v1/student', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, action is required')
+
+    @tag('missing_detail')
+    def test_missing_act(self):
+        data = {
+            'act': 'create'
+        }
+        response = self.client.post('/api/v1/student', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, detail is required')
+
+@tag('parent')
+class ParentTEst(TestCase):
+    def setUp(self):
+        self.new_user = User.objects.create_user(username='test', password='test')
+        self.token = Token.objects.create(user=self.new_user)
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+        self.school = School.objects.create(
+        name='school A',
+        description='description A',
+        user=self.new_user
+        )
+        self.grade = Grade.objects.create(
+            name='1',
+            description='description 1',
+            school=self.school
+        )
+        self.children = Student.objects.create(
+            first_name='F1',
+            last_name='L1',
+            nick_name='N1',
+            grade = self.grade
+        )
+        Parent.objects.create(
+            first_name='P1',
+            last_name='L1'
+        )
+    
+    @tag('get')
+    def test_get_parent(self):
+        response = self.client.get('/api/v1/parent/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'success')
+    
+    @tag('duplicatge_create')
+    def test_duplicate_create_parent(self):
+        obj = Parent.objects.create(
+            first_name='P1',
+            last_name='L1',
+            user=self.new_user,
+            children=self.children
+        )
+
+        detail = {
+            'first_name': 'P1',
+            'last_name=': 'L1'
+        }
+        data = {
+            'act': 'create',
+            'detail': detail
+        }
+        response = self.client.post('/api/v1/parent/')
+        self.assertEqual(response.status_code, 400)
+    
+    @tag('update')
+    def test_update_parent(self):
+        obj = Parent.objects.create(
+            first_name='P1',
+            last_name='L1',
+            user=self.new_user,
+            children=self.children
+        )
+        
+        detail = {
+            'first_name': 'P2',
+            'last_name': 'L2'
+        }
+        data = {
+            'act': 'update',
+            'pk': str(obj.pk),
+            'detail': detail
+        }
+        response = self.client.post('/api/v1/parent/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'update success')
+
+        update_objs = Parent.objects.filter(pk=obj.pk, first_name='P2', last_name='L2')
+        self.assertEqual(len(update_objs), 1)
+
+        objs = Parent.objects.filter(pk=obj.pk, first_name='P1', last_name='L1' )
+        self.assertEqual(len(objs), 0)
+
+    @tag('duplicate_update')
+    def test_duplicate_update_parent(self):
+        obj = Parent.objects.create(
+            first_name='P1',
+            last_name='L1',
+            user=self.new_user,
+            children=self.children
+        )
+
+        detail = {
+            'first_name': 'P1',
+            'last_name': 'L2'
+        }
+        data = {
+            'act': 'update',
+            'pk': str(obj.pk),
+            'detail': detail
+        }
+        response = self.client.post('/api/v1/parent/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    @tag('missing_act')
+    def test_missing_act(self):
+        data = {
+            'detail': {
+                'first_name': 'P1',
+                'last_name': 'L2'
+            }
+        }
+        response = self.client.post('api/v1/parent/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, action is required')
+    
+    @tag('missing_detail')
+    def test_missing_act(self):
+        data = {
+            'act':'create'
+        }
+        response = self.client.post('api/v1/parent/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, detail is required')
