@@ -23,7 +23,6 @@ class APISchool(APIView):
         # print('token of prach=', token_of_prach.key == token_)
         # print(request.user, '------aaa')
         # 12/0
-
         data = request.data
         act = data.get('act')
         detail = data.get('detail')
@@ -31,6 +30,12 @@ class APISchool(APIView):
             detail.update({
                 'user':request.user.pk
             })
+            name = detail['name']
+            objs = School.objects.filter(name=name)
+            if objs.exists():
+                return Response ('duplicated school', status=400)
+
+
             serializer = SchoolSerializer(data=detail, many=False)
             if serializer.is_valid():
                 serializer.save()
@@ -43,6 +48,12 @@ class APISchool(APIView):
             this_user = request.user
             schools = School.objects.filter(user=this_user)
             # print('--------------------------ans',School.objects.filter(user=this_user))
+            name = detail['name']
+            objs = School.objects.filter(name=name)
+            if objs.exists():
+                return Response('duplicated school', 400)
+
+
             if not schools.exists():
                 return Response('fail', status=400)
 
@@ -86,21 +97,38 @@ class APIGrade(APIView):
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
+            name = detail['name']
+            objs = Grade.objects.filter(name=name)
+            if objs.exists():
+                return Response('duplicated grade', status=400)
+
+
             serializer = GradeSerializer(data=detail, many=False)
             if serializer.is_valid():
                 serializer.save()
                 return Response('create success', status=200)
             else:
                 return Response(serializer.errors, status=400)
-        
-        #grade should not have 'update' --> in fact, it cannot be changed
-        # if act =='update':
-        #     grades = Grade.objects.filter(grade=data['grade'])
-        #     if not grades.exist():
-        #         return ...
-        
-        #     grades.update(**detail)
-        #     return Response('success', status=201)
+
+        if act == 'update':
+            grades = Grade.objects.filter(pk=data['pk'], school__user=request.user)
+            name = detail['name']
+            objs = Grade.objects.filter(name=name)
+            if objs.exists():
+                return Response('duplicated update', status=400)
+            
+            if not grades.exists():
+                return Response('unable to update', status=400)
+            
+            grades.update(**data['detail'])
+            return Response('update success', status=200)
+            # print('---',data)
+            # print('----data[pk]', data['pk'])
+            # grades = Grade.objects.filter(pk=data['pk'])
+            # print('-----students', grades, type(grades))
+            # grades.update(**data['detail'])
+            # return ...
+            
 
 class APIStudent(APIView):
     def get (self, request):
@@ -123,12 +151,11 @@ class APIStudent(APIView):
                 return Response(serialzer.errors, status=400)
     
         if act == 'update':
-            this_user = request.user
-            print('-----------------------result')
-            students = Student.objects.filter(user=this_user)
+            pk = data['pk']
+            students = Student.objects.filter(pk=pk, grade__school__user=request.user)
             if not students.exists():
                 return Response('unable to update', status=400)
-            
+    
             students.update(**request.data['detail'])
             return Response('update success', status=200)
 

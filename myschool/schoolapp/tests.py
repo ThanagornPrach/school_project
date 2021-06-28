@@ -39,7 +39,7 @@ class BasicTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, 'failed, action is required')
 
-    @tag('get')
+    @tag('get_school')
     def test_get_school(self):
         # area = self.get_area(20, 40)
         response = self.client.get('/api/v1/school/')
@@ -47,7 +47,7 @@ class BasicTest(TestCase):
         self.assertEqual(response.data, 'success')
     
     #test update school
-    @tag('update')
+    @tag('update_school')
     def test_update_school(self):
         obj = School.objects.create(name='A', description='description A', user=self.new_user)
         
@@ -76,7 +76,7 @@ class BasicTest(TestCase):
         objs = School.objects.filter(user=self.new_user, name='A')
         self.assertEqual(len(objs), 0)
 
-    @tag('duplicate_update')
+    @tag('duplicate_update_school')
     def test_update_duplicate_school(self):
         obj = School.objects.create(name="A", description='description A', user=self.new_user)
         
@@ -101,7 +101,7 @@ class BasicTest(TestCase):
     #     self.assertEqual(response.status_code, 400)
     #     self.assertEqual(response.data, 'failed, action is required')
     
-    @tag('duplicate_create')
+    @tag('duplicate_create_school')
     def test_create_duplicate_school(self):
         obj = School.objects.create(
             user=self.new_user, 
@@ -127,7 +127,7 @@ class GradeTest(TestCase):
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
 
-        self.school = School.objects.create(user=self.new_user, name='school A')
+        self.school = School.objects.create(user=self.new_user, name='school A', description='description A')
        
         #setup new grade
         Grade.objects.create(
@@ -147,25 +147,33 @@ class GradeTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, 'failed, action is required')
 
-    @tag('get')
+    @tag('get_grade')
     def test_get_grade(self):
         response = self.client.get('/api/v1/grade/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'success')
     
-    @tag('duplicate_create')
+    @tag('duplicate_create_grade')
     def test_create_duplicate_grade(self):
+        obj = Grade.objects.create(
+            name='1', 
+            description='description 1', 
+            school=self.school
+        )
+
+        detail = {
+            'name': '1',
+            'detail': 'description 1'
+        }
         data = {
             'act':'create',
-            'detail':{
-                'name':'1',
-                'description': 'description 1'
+            'pk': str(obj.pk),
+            'detail':detail
             }
-        }
         response = self.client.post('/api/v1/grade/', data, format='json')
         self.assertEqual(response.status_code, 400)
     
-    @tag('update')
+    @tag('update_grade')
     def test_update_grade(self):
         obj = Grade.objects.create(
             name='1', 
@@ -174,11 +182,11 @@ class GradeTest(TestCase):
 
         detail = {
             'name': '2',
-            'pk': str(obj.pk),
             'description': 'description 2'
         }
         data = {
             'act': 'update',
+            'pk': str(obj.pk),
             'detail': detail
         }
         response = self.client.post('/api/v1/grade/', data, format='json')
@@ -192,6 +200,24 @@ class GradeTest(TestCase):
         #check old grade
         objs = Grade.objects.filter(pk=obj.pk, name='1', description='description 1')
         self.assertEqual(len(objs), 0)
+    
+    @tag('duplicate_update_grade')
+    def test_duplicate_update_grade(self):
+        obj = Grade.objects.create(
+            name='1', description='description 1', school=self.school
+        )
+
+        detail = {
+            'name': '1',
+            'description': 'description 1'
+        }
+        data = {
+            'act': 'update',
+            'pk': str(obj.pk),
+            'detail': detail
+        }
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        self.assertEqual(response.status_code, 400)
     
 
 @tag('student')
