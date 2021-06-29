@@ -6,6 +6,26 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 
+class APIUser(APIView):
+    def get(self, request):
+        data = request.GET.dict()
+        objs = User.objects.filter(**data)
+        serializer = UserSerializer(objs, many=True)
+        return Response('success', status=200)
+    
+    def post(self, request):
+        data = request.data
+        act = data.get['act']
+        detail = data.get['detail']
+        if act == 'create':
+            serilaizer = UserSerializer(data=detail, many=False)
+            if serilaizer.is_valid():
+                serilaizer.save()
+                return Response('create success', status=200)
+            else:
+                return Response(serilaizer.errors, status=400)
+
+
 class APISchool(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request):
@@ -111,8 +131,10 @@ class APIGrade(APIView):
                 return Response(serializer.errors, status=400)
 
         if act == 'update':
-            grades = Grade.objects.filter(pk=data['pk'], school__user=request.user)
+            grades = Grade.objects.filter(name=data['old name'], school__user=request.user)
+            # print('--------------------------------ssss',Grade.objects.filter(pk=data['pk'], school__user=request.user))
             name = detail['name']
+            # print('-------------------------------ddddd', detail['name'])
             objs = Grade.objects.filter(name=name)
             if objs.exists():
                 return Response('duplicated update', status=400)
@@ -143,6 +165,14 @@ class APIStudent(APIView):
         detail = data.get('detail')
         # print('-----------------result', data)
         if act == 'create':
+            first_name = detail['first_name']
+            last_name = detail['last_name']
+            nick_name = detail['nick_name']
+            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name)
+            if  objs.exists():
+                return Response('duplicated student', status=400)
+
+
             serialzer = StudentSerializer(data=detail, many=False)
             if serialzer.is_valid():
                 serialzer.save()
@@ -151,8 +181,19 @@ class APIStudent(APIView):
                 return Response(serialzer.errors, status=400)
     
         if act == 'update':
-            pk = data['pk']
-            students = Student.objects.filter(pk=pk, grade__school__user=request.user)
+            students = Student.objects.filter(
+                first_name=data['old_first_name'],
+                last_name=data['old_last_name'],
+                nick_name=data['old_nick_name'], 
+                grade__school__user=request.user)
+            first_name = detail['first_name']
+            last_name = detail['last_name']
+            nick_name = detail['nick_name']
+            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name)
+            if  objs.exists():
+                return Response('duplicated student', status=400)
+
+
             if not students.exists():
                 return Response('unable to update', status=400)
     

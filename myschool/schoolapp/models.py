@@ -88,7 +88,7 @@ class Student(models.Model):
     last_name = models.CharField(max_length=125, null=True)
     nick_name = models.CharField(max_length=125, null=True)
     def __str__(self):
-        return '%s - %s'%(self.first_name, self.last_name, self.nick_name)
+        return '%s - %s - %s ' % (self.first_name, self.last_name, self.nick_name)
 
 class Parent(models.Model):
     director = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
@@ -97,7 +97,7 @@ class Parent(models.Model):
     first_name = models.CharField(max_length=125, null=True)
     last_name = models.CharField(max_length=125, null=True)
     def __str__(self):
-        return '%s - %s'%(self.first_name, self.last_name)
+        return '%s - %s' % (self.first_name, self.last_name)
 
 
 
