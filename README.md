@@ -1,14 +1,29 @@
 <h1>Today Progress</h1>
 
 
+
+# create user
+Post /api/v1/user/
+```json
+{
+    "act": "create",
+    "detail": {
+        "username": "tom"
+    }
+}
+```
+
+# check user
+GET /api/v1/user/
+
 # create school
 POST /api/v1/school/
 ```json
 {
 	"act": "create",
     "detail": {
-        "name": "create-name",
-        "description": "create-description"
+        "name": "school a",
+        "description": "this is description"
     }
 }
 ```
@@ -18,14 +33,15 @@ POST /api/v1/school/
 ```json
 {
     "act": "update",
+    "old name": "school a",
     "detail": {
-        "name": "update-name",
-        "description": "update-description"
+        "name": "school b",
+        "description": "this is description"
     }
 }
 ```
 
-# read school
+# check school
 GET/ api/v1/school/
 
 
@@ -38,8 +54,8 @@ POST /api/v1/grade/
 {
     "act": "create",
     "detail": {
-        "name": "create-grade",
-        "detail": "create-description"
+        "name": "1",
+        "detail": "this is description"
     }
 }
 ```
@@ -49,9 +65,10 @@ POST /api/v1/grade/
 ```json
 {
     "act": "update",
+    "old name": "1",
     "detail": {
-        "name": "update-grade",
-        "description": "update-description"
+        "name": "2",
+        "description": "this is description"
     }
 }
 ```
@@ -61,15 +78,16 @@ POST /api/v1/grade/
 # read grade
 GET /api/v1/grade/
 
+
 # create student
 POST /api/v1/student/
 ```json
 {
     "act": "create",
     "detail": {
-        "first_name": "create-first_name",
-        "last_name": "create-last_name",
-        "nick_name": "create-nick_name"
+        "first_name": "tom",
+        "last_name": "tomus",
+        "nick_name": "tom-tom"
     }
 }
 ```
@@ -79,11 +97,13 @@ POST /api/v1/student/
 ```json
 {
     "act": "update",
-    "pk": "5",
+    "old_first_name": "tom",
+    "old_last_name": "tomus",
+    "old_nick_name": "tom-tom",
     "detail": {
-        "first_name": "update-first_name",
-        "last_name": "update-last_name",
-        "nick_name": "update-nick_name"
+        "first_name": "bom",
+        "last_name": "bomus",
+        "nick_name": "bom-bom"
     }
 }
 ``` 
