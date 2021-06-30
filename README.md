@@ -8,7 +8,8 @@ Post /api/v1/user/
 {
     "act": "create",
     "detail": {
-        "username": "tom"
+        "username": "tom",
+        "password": "123"
     }
 }
 ```

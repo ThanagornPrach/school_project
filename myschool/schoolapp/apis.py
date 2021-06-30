@@ -13,17 +13,44 @@ class APIUser(APIView):
         serializer = UserSerializer(objs, many=True)
         return Response('success', status=200)
     
-    def post(self, request):
+    def post(self, request): 
         data = request.data
-        act = data.get['act']
-        detail = data.get['detail']
+        act = data.get('act')
+        detail = data.get('detail')
         if act == 'create':
-            serilaizer = UserSerializer(data=detail, many=False)
-            if serilaizer.is_valid():
-                serilaizer.save()
-                return Response('create success', status=200)
-            else:
-                return Response(serilaizer.errors, status=400)
+            username = detail['username']
+            objs = User.objects.filter(username=username)
+            if objs.exists():
+                return Response('duplicated username', status=400)
+
+            new_user = User.objects.create_user(username=detail['username'], password=detail['password'])
+            new_user.save()
+            # serialzer = UserSerializer(data=detail, many=False)
+            # if serialzer.is_valid():
+            #     serialzer.save()
+            return Response('create success', status=200)
+            # else:
+            #     return Response(serialzer.errors, status=400) 
+
+            # new_user = User.objects.create_user(username='username', password='password')
+            # new_user.save()
+            # return Response('create success', status=200)
+        
+        if act == 'update':
+            this_user = request.user
+            users = User.objects.filter(username=this_user)
+           
+            username = detail['username']
+            objs = User.objects.filter(username=username)
+            if objs.exists():
+                return Response('duplicated update', status=400)
+            
+            if not users.exists():
+                return Response('unable to update', status=400)
+            
+            users.update(**data['detail'])
+            return Response('update success', status=200)
+
 
 
 class APISchool(APIView):
@@ -37,10 +64,10 @@ class APISchool(APIView):
         return Response('success', status=200)
 
     def post(self, request):
-        # user = User.objects.get(username='prach')
-        # token_of_prach = Token.objects.get(user = user)
-        # token_ = 'Token fd4dad10a051f7c4668245155c7324b28e172c15'
-        # print('token of prach=', token_of_prach.key == token_)
+        # user = User.objects.get(username='P')
+        # token_of_p = Token.objects.get(user = user)
+        # token_ = 'Token 00084e7ffe28f841c749cf6b4f957176070bd4a9 '
+        # print('token of P=', token_of_p.key == token_)
         # print(request.user, '------aaa')
         # 12/0
         data = request.data
@@ -55,11 +82,11 @@ class APISchool(APIView):
             if objs.exists():
                 return Response ('duplicated school', status=400)
 
-
+            print('------------------------sssss', detail)
             serializer = SchoolSerializer(data=detail, many=False)
             if serializer.is_valid():
                 serializer.save()
-                return Response('success', status=200)
+                return Response('create success', status=200)
             else:
                 return Response(serializer.errors, status=400)
 
@@ -186,6 +213,7 @@ class APIStudent(APIView):
                 last_name=data['old_last_name'],
                 nick_name=data['old_nick_name'], 
                 grade__school__user=request.user)
+            #check duplicate
             first_name = detail['first_name']
             last_name = detail['last_name']
             nick_name = detail['nick_name']
@@ -213,6 +241,16 @@ class APIParent(APIView):
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
+            detail.update({
+                'director':request.user.pk
+            })
+            first_name = detail['first_name']
+            last_name = detail['last_name']
+            objs = Parent.objects.filter(first_name=first_name, last_name=last_name)
+            if objs.exists():
+                return Response('duplicated parent', status=400)
+
+
             serializer = ParentSerializer(data=detail, many=False)
             if serializer.is_valid():
                 serializer.save()
@@ -222,7 +260,7 @@ class APIParent(APIView):
         
         if act == 'update':
             this_user = request.user
-            parents = Parent.objects.filter(user=this_user)
+            parents = Parent.objects.filter(director=this_user)
             if not parents.exists():
                 return Response('unable to update', status=400)
             

@@ -5,12 +5,13 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = []
+        fields = ['username', 'password']
 
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
-        fields = ['name', 'description']
+        # fields = ['name', 'description']
+        fields = '__all__'
 
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
