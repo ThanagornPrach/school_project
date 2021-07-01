@@ -144,6 +144,10 @@ class APIGrade(APIView):
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
+            detail.update({
+                'school': School.objects.get(user=request.user).pk
+            })
+            # print('----------------------------' check type)
             name = detail['name']
             objs = Grade.objects.filter(name=name)
             if objs.exists():
@@ -155,6 +159,7 @@ class APIGrade(APIView):
                 serializer.save()
                 return Response('create success', status=200)
             else:
+                print('--------------------------qqqq')
                 return Response(serializer.errors, status=400)
 
         if act == 'update':
@@ -261,6 +266,13 @@ class APIParent(APIView):
         if act == 'update':
             this_user = request.user
             parents = Parent.objects.filter(director=this_user)
+            first_name = detail['first_name']
+            last_name = detail['last_name']
+            objs = Parent.objects.filter(first_name=first_name, last_name=last_name)
+            if objs.exists():
+                return Response('duplicated parent', status=400)
+
+        
             if not parents.exists():
                 return Response('unable to update', status=400)
             

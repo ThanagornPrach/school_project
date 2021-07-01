@@ -16,7 +16,8 @@ class SchoolSerializer(serializers.ModelSerializer):
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
-        fields = ['name', 'description']
+        # fields = ['name', 'description']
+        fields = '__all__'
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:

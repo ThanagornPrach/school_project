@@ -221,11 +221,30 @@ class GradeTest(TestCase):
         self.school = School.objects.create(user=self.new_user, name='school A', description='description A')
        
         #setup new grade
-        Grade.objects.create(
-            name = '1',
-            description = 'description 1'
-        )
+        # Grade.objects.create(
+        #     name = '1',
+        #     description = 'description 1'
+        # )
     
+    @tag('create_grade')
+    def test_create_grade(self):
+        data = {
+            'act': 'create',
+            'detail': {
+                'name': '1',
+                'description': 'description 1'
+            }
+        }
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        # print('------------------------aaa', response.data)
+        self.assertEqual(response.status_code, 200)
+        # print('------------------------------------')
+        self.assertEqual(response.data, 'create success')
+
+        grades = Grade.objects.filter(name=data['detail']['name'], description=data['detail']['description'], school=self.school)
+        # print('------------------------------aaaa', grades)
+        self.assertEqual(len(grades), 1)
+
     @tag('missing_act')
     def test_missing_act(self):
         data = {
@@ -535,17 +554,19 @@ class ParentTEst(TestCase):
         obj = Parent.objects.create(
             first_name='P1',
             last_name='L1',
-            user=self.new_user,
-            children=self.children
+            director=self.new_user
         )
+
+        p1 = obj.children.add(self.children)
 
         detail = {
             'first_name': 'P1',
-            'last_name': 'L2'
+            'last_name': 'L1'
         }
         data = {
             'act': 'update',
-            'pk': str(obj.pk),
+            'old_first_name': str(obj.first_name),
+            'old_last_name': str(obj.last_name),
             'detail': detail
         }
         response = self.client.post('/api/v1/parent/', data, format='json')

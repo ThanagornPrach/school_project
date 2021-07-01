@@ -13,6 +13,20 @@ Post /api/v1/user/
     }
 }
 ```
+# get-token 
+Post /api/v1/get-token/
+
+# update user
+Post /api/v1/user/
+```json
+{
+    "act": "create",
+    "old username": "tom",
+    "detail": {
+        "username": "oom",
+        "password": "1234"
+    }
+}
 
 # check user
 GET /api/v1/user/
@@ -120,8 +134,8 @@ POST /api/v1/parent/
 {
     "act": "create",
     "detail": {
-        "first_name": "create-first_name",
-        "last_name": "create-last_name"
+        "first_name": "tom",
+        "last_name": "tom-tom"
     }
 }
 ```
@@ -131,6 +145,8 @@ POST /api/v1/parent/
 ```json
 {
     "act": "update",
+    "old_first_name": "bom",
+    "old_last_name": "bom-bom",
     "detail": {
         "first_name": "update-first_name",
         "last_name": "update-last_name"
