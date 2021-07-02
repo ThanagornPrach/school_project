@@ -27,9 +27,22 @@ Post /api/v1/user/
         "password": "1234"
     }
 }
+```
 
 # check user
 GET /api/v1/user/
+
+# delete user
+Post /api/v1/user/
+```json
+{
+    "act": "delete",
+    "detail": {
+        "username": "tom",
+        "password": "123"
+    }
+}
+```
 
 # create school
 POST /api/v1/school/
@@ -61,7 +74,16 @@ GET/ api/v1/school/
 
 
 # delete school
-
+POST /api/v1/school/
+```json
+{
+	"act": "delete",
+    "detail": {
+        "name": "school a",
+        "description": "this is description"
+    }
+}
+```
 
 # create grade
 POST /api/v1/grade/
@@ -89,6 +111,16 @@ POST /api/v1/grade/
 ```
 
 # delete grade
+POST /api/v1/grade/
+```json
+{
+    "act": "delete",
+    "detail": {
+        "name": "2",
+        "description": "this is description"
+    }
+}
+```
 
 # read grade
 GET /api/v1/grade/
@@ -124,6 +156,17 @@ POST /api/v1/student/
 ``` 
 
 # delete student
+POST /api/v1/student/
+```json
+{
+    "act": "delete",
+    "detail": {
+        "first_name": "tom",
+        "last_name": "tomus",
+        "nick_name": "tom-tom"
+    }
+}
+```
 
 # reade student
 GET /api/v1/student/
@@ -155,6 +198,16 @@ POST /api/v1/parent/
 ```
 
 # delete parent
+POST /api/v1/parent/
+```json
+{
+    "act": "delete",
+    "detail": {
+        "first_name": "tom",
+        "last_name": "tom-tom"
+    }
+}
+```
 
 # reade parent
 GET /api/v1/parent/

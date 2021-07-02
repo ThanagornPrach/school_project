@@ -50,6 +50,13 @@ class APIUser(APIView):
             
             users.update(**data['detail'])
             return Response('update success', status=200)
+        
+        if act == 'delete':
+            this_user = request.user
+            delete_user = User.objects.filter(username=this_user).delete()
+            return Response('delete success', status=200)
+        else:
+            return Response('unable to delete', status=400)
 
 
 
@@ -130,6 +137,14 @@ class APISchool(APIView):
             # }
 
             return Response('update success', status=200)
+        
+        if act == 'delete':
+            this_user = request.user
+            delete_schools = School.objects.filter(user=request.user).delete()
+            return Response('delete success', status=200)
+        else:
+            return Response('unable to delete', status=400)
+
 
 class APIGrade(APIView):
     def get(self, request):
@@ -182,6 +197,13 @@ class APIGrade(APIView):
             # print('-----students', grades, type(grades))
             # grades.update(**data['detail'])
             # return ...
+        
+        if act == 'delete':
+            delete_grades = Grade.objects.filter(name=data['detail']['name'], description=data['detail']['description'], school__user=request.user).delete()
+            # delete_schools = School.objects.filter(user=request.user).delete()
+            return Response('delete success', status=200)
+        else:
+            return Response('unable to delete', status=400)
             
 
 class APIStudent(APIView):
@@ -197,13 +219,15 @@ class APIStudent(APIView):
         detail = data.get('detail')
         # print('-----------------result', data)
         if act == 'create':
+            detail.update({
+                'grade': Grade.objects.get(school__user=request.user).pk
+            })
             first_name = detail['first_name']
             last_name = detail['last_name']
             nick_name = detail['nick_name']
             objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name)
             if  objs.exists():
                 return Response('duplicated student', status=400)
-
 
             serialzer = StudentSerializer(data=detail, many=False)
             if serialzer.is_valid():
@@ -232,13 +256,24 @@ class APIStudent(APIView):
     
             students.update(**request.data['detail'])
             return Response('update success', status=200)
+        
+        if act == 'delete':
+            delete_students = Student.objects.filter(
+                first_name=data['detail']['first_name'], 
+                last_name=data['detail']['last_name'], 
+                nick_name=data['detail']['nick_name'],
+                grade__school__user=request.user).delete()
+            # delete_schools = School.objects.filter(user=request.user).delete()
+            return Response('delete success', status=200)
+        else:
+            return Response('unable to delete', status=400)
 
 
 class APIParent(APIView):
     def get (self, request):
         data = request.GET.dict()
         objs = Parent.objects.filter(**data)
-        serializer = ParentSerializer(objs, many=True)
+        serializer = ParentOutSerializer(objs, many=True)
         return Response('success',status=200)
 
     def post(self, request):
@@ -256,7 +291,7 @@ class APIParent(APIView):
                 return Response('duplicated parent', status=400)
 
 
-            serializer = ParentSerializer(data=detail, many=False)
+            serializer = ParentInSerializer(data=detail, many=False)
             if serializer.is_valid():
                 serializer.save()
                 return Response('create success', status=200)
@@ -278,3 +313,14 @@ class APIParent(APIView):
             
             parents.update(**request.data['detail'])
             return Response('update success', status=200)
+        
+        if act == 'delete':
+            this_user = request.user
+            delete_parents = Parent.objects.filter(
+                first_name=data['detail']['first_name'], 
+                last_name=data['detail']['last_name'], 
+                director=this_user).delete()
+            # delete_schools = School.objects.filter(user=request.user).delete()
+            return Response('delete success', status=200)
+        else:
+            return Response('unable to delete', status=400)

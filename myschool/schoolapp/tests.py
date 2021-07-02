@@ -85,6 +85,29 @@ class UserTest(TestCase):
         response = self.client.post('/api/v1/user/', data, format='json')
         self.assertEqual(response.status_code, 400)
 
+    @tag('delete_user')
+    def test_delete_user(self):
+        obj = User.objects.create(username='user 1', password='123')
+
+        detail = {
+            'username': 'user 1',
+            'password': '123'
+        }
+        data = {
+            'act': 'delete',
+            'detail': detail
+        }
+
+        delete_user = obj.delete()
+
+        response = self.client.post('/api/v1/user/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'delete success')
+
+        users = User.objects.filter(
+            username=data['detail']['username'], 
+            password=data['detail']['password'])
+        self.assertEqual(len(users), 0)
     
 
 
@@ -210,6 +233,31 @@ class BasicTest(TestCase):
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 400)
 
+    @tag('delete_school')
+    def test_delete_school(self):
+        obj = School.objects.create(name='school A', description='123', user=self.new_user)
+
+        detail = {
+            'name': 'school A',
+            'description': '123'
+        }
+        data = {
+            'act': 'delete',
+            # 'delete name': str(obj.name),
+            'detail': detail
+        }
+
+        delete_school = obj.delete()
+
+        response = self.client.post('/api/v1/school/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'delete success')
+
+        schools = School.objects.filter(
+            name=data['detail']['name'], 
+            description=data['detail']['description'])
+        self.assertEqual(len(schools), 0)
+
 @tag('grade')
 class GradeTest(TestCase):
     def setUp(self):
@@ -330,6 +378,31 @@ class GradeTest(TestCase):
         response = self.client.post('/api/v1/grade/', data, format='json')
         self.assertEqual(response.status_code, 400)
     
+    @tag('delete_grade')
+    def test_delete_grade(self):
+        obj = Grade.objects.create(name='A', description='123', school=self.school)
+
+        detail = {
+            'name': 'A',
+            'description': '123'
+        }
+        data = {
+            'act': 'delete',
+            # 'delete name': str(obj.name),
+            'detail': detail
+        }
+
+        delete_grade = obj.delete()
+
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'delete success')
+
+        grades = Grade.objects.filter(
+            name=data['detail']['name'], 
+            description=data['detail']['description'])
+        self.assertEqual(len(grades), 0)
+    
 
 @tag('student')
 class StudentTest(TestCase):
@@ -342,10 +415,31 @@ class StudentTest(TestCase):
         self.school = School.objects.create(user=self.new_user, name='school A')
         self.grade = Grade.objects.create(school=self.school)
 
-        Student.objects.create(
-            first_name='F1',
-            last_name='L1',
-            nick_name='N1')
+        # Student.objects.create(
+        #     first_name='F1',
+        #     last_name='L1',
+        #     nick_name='N1')
+    
+    @tag('create_student')
+    def test_create_student(self):
+        data = {
+            'act': 'create',
+            'detail': {
+                'first_name': 'N1',
+                'last_name': 'N2',
+                'nick_name': 'N3'
+            }
+        }
+        response = self.client.post('/api/v1/student/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'create success')
+
+        students = Student.objects.filter(
+            first_name=data['detail']['first_name'], 
+            last_name=data['detail']['last_name'], 
+            nick_name=data['detail']['nick_name'],
+            grade=self.grade)
+        self.assertEqual(len(students), 1)
     
     @tag('get_student')
     def test_get_student(self):
@@ -427,6 +521,39 @@ class StudentTest(TestCase):
         }
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 400)
+    
+    @tag('delete_student')
+    def test_delete_student(self):
+        obj = Student.objects.create(
+            first_name='F1',
+            last_name='L1',
+            nick_name='N1',
+            grade = self.grade)
+
+        detail = {
+            'first_name': 'F1',
+            'last_name': 'L1',
+            'nick_name': 'N1'
+        }
+        data = {
+            'act': 'delete',
+            # 'delete_first_name':str(obj.first_name),
+            # 'delete_last_name': str(obj.last_name),
+            # 'delete_nick_name': str(obj.nick_name),
+            'detail': detail
+        }
+
+        delete_student = obj.delete()
+
+        response = self.client.post('/api/v1/student/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'delete success')
+
+        grades = Student.objects.filter(
+            first_name=data['detail']['first_name'], 
+            last_name=data['detail']['last_name'],
+            nick_name=data['detail']['nick_name'])
+        self.assertEqual(len(grades), 0)
 
     @tag('missing_act')
     def test_missing_act(self):
@@ -474,10 +601,10 @@ class ParentTEst(TestCase):
             nick_name='N1',
             grade = self.grade
         )
-        Parent.objects.create(
-            first_name='P1',
-            last_name='L1'
-        )
+        # Parent.objects.create(
+        #     first_name='P1',
+        #     last_name='L1'
+        # )
     
     @tag('get_parent')
     def test_get_parent(self):
@@ -491,12 +618,22 @@ class ParentTEst(TestCase):
             'act': 'create',
             'detail': {
                 'first_name': 'P1',
-                'last_name': 'L1'
+                'last_name': 'L1',
+                # 'children': str(self.children)
             }
         }
         response = self.client.post('/api/v1/parent/', data, format='json')
+        print('------------------------33', response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'create success')
+
+        parents = Parent.objects.filter(
+            first_name=data['detail']['first_name'], 
+            last_name=data['detail']['last_name'],
+            director=self.new_user,
+            )
+        print('----------------------------111',)
+        self.assertEqual(len(parents), 1)
 
     @tag('duplicate_create_parent')
     def test_duplicate_create_parent(self):
@@ -571,6 +708,38 @@ class ParentTEst(TestCase):
         }
         response = self.client.post('/api/v1/parent/', data, format='json')
         self.assertEqual(response.status_code, 400)
+
+    @tag('delete_parent')
+    def test_delete_parent(self):
+        obj = Parent.objects.create(
+            first_name='F1',
+            last_name='L1',
+            director=self.new_user)
+        
+        p1 = obj.children.add(self.children)
+
+
+        detail = {
+            'first_name': 'F1',
+            'last_name': 'L1',
+        }
+        data = {
+            'act': 'delete',
+            # 'delete_first_name':str(obj.first_name),
+            # 'delete_last_name': str(obj.last_name),
+            'detail': detail
+        }
+
+        delete_student = obj.delete()
+
+        response = self.client.post('/api/v1/parent/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'delete success')
+
+        parents = Parent.objects.filter(
+            first_name=data['detail']['first_name'], 
+            last_name=data['detail']['last_name'])
+        self.assertEqual(len(parents), 0)
 
     @tag('missing_act')
     def test_missing_act(self):

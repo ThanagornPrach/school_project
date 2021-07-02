@@ -22,9 +22,18 @@ class GradeSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
-        fields = ['first_name', 'last_name', 'nick_name']
+        # fields = ['first_name', 'last_name', 'nick_name']
+        fields = '__all__'
 
-class ParentSerializer(serializers.ModelSerializer):
+class ParentInSerializer(serializers.ModelSerializer):  #In = into the database 
     class Meta:
         model = Parent
-        fields = ['first_name', 'last_name']
+        # fields = ['first_name', 'last_name']
+        # fields = '__all__'
+        exclude = ['children']
+
+class ParentOutSerializer(serializers.ModelSerializer): #Out = show to the user 
+    class Meta:
+        model = Parent
+        fields = '__all__'
+
