@@ -21,7 +21,7 @@ class UserTest(TestCase):
     def test_get_user(self):
         response = self.client.get('/api/v1/user/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'success')
+        self.assertEqual(len(response.data), 2)
     
     @tag('create_user')
     def test_create_user(self):
@@ -150,24 +150,24 @@ class BasicTest(TestCase):
         # user__username='test'
         self.assertEqual(len(schools), 1)
 
-    @tag('missing_act_school')
-    def test_missing_act(self):
-        data = {
-            'detail': {
-                'name': 'A',
-                'description': 'description A'
-            }
-        }
-        response = self.client.post('/api/v1/school/', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+    # @tag('missing_act_school')
+    # def test_missing_act(self):
+    #     data = {
+    #         'detail': {
+    #             'name': 'A',
+    #             'description': 'description A'
+    #         }
+    #     }
+    #     response = self.client.post('/api/v1/school/', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.data, 'failed, action is required')
 
     @tag('get_school')
     def test_get_school(self):
         # area = self.get_area(20, 40)
         response = self.client.get('/api/v1/school/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'success')
+        self.assertEqual(len(response.data), 3)
     
     #test update school
     @tag('update_school')
@@ -293,23 +293,24 @@ class GradeTest(TestCase):
         # print('------------------------------aaaa', grades)
         self.assertEqual(len(grades), 1)
 
-    @tag('missing_act')
-    def test_missing_act(self):
-        data = {
-            'detail': {
-                'name': '1',
-                'description': 'description 1'
-            }
-        }
-        response = self.client.post('/api/v1/grade/', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+    # @tag('missing_act')
+    # def test_missing_act(self):
+    #     data = {
+    #         'detail': {
+    #             'name': '1',
+    #             'description': 'description 1'
+    #         }
+    #     }
+    #     response = self.client.post('/api/v1/grade/', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.data, 'failed, action is required')
 
     @tag('get_grade')
     def test_get_grade(self):
         response = self.client.get('/api/v1/grade/')
+        # print('----------------------111', response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'success')
+        self.assertEqual(len(response.data), 3)
     
     @tag('duplicate_create_grade')
     def test_create_duplicate_grade(self):
@@ -445,7 +446,7 @@ class StudentTest(TestCase):
     def test_get_student(self):
         response = self.client.get('/api/v1/student/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'success')
+        self.assertEqual(len(response.data), 4)
     
     @tag('duplicate_create_student')
     def test_create_duplicate_student(self):
@@ -555,27 +556,27 @@ class StudentTest(TestCase):
             nick_name=data['detail']['nick_name'])
         self.assertEqual(len(grades), 0)
 
-    @tag('missing_act')
-    def test_missing_act(self):
-        data = {
-            'detail': {
-                'first_name':'F1',
-                'last_name': 'L1',
-                'nick_name': 'N1'
-            }
-        }
-        response = self.client.post('/api/v1/student', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+    # @tag('missing_act')
+    # def test_missing_act(self):
+    #     data = {
+    #         'detail': {
+    #             'first_name':'F1',
+    #             'last_name': 'L1',
+    #             'nick_name': 'N1'
+    #         }
+    #     }
+    #     response = self.client.post('/api/v1/student', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.data, 'failed, action is required')
 
-    @tag('missing_detail')
-    def test_missing_act(self):
-        data = {
-            'act': 'create'
-        }
-        response = self.client.post('/api/v1/student', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, detail is required')
+    # @tag('missing_detail')
+    # def test_missing_act(self):
+    #     data = {
+    #         'act': 'create'
+    #     }
+    #     response = self.client.post('/api/v1/student', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.data, 'failed, detail is required')
 
 @tag('parent')
 class ParentTEst(TestCase):
@@ -610,7 +611,7 @@ class ParentTEst(TestCase):
     def test_get_parent(self):
         response = self.client.get('/api/v1/parent/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'success')
+        self.assertEqual(len(response.data), 4)
     
     @tag('create_parent')
     def test_create_parent(self):
@@ -622,6 +623,8 @@ class ParentTEst(TestCase):
                 # 'children': str(self.children)
             }
         }
+        p1 = data.children.add(self.children)
+        
         response = self.client.post('/api/v1/parent/', data, format='json')
         print('------------------------33', response.data)
         self.assertEqual(response.status_code, 200)
@@ -741,23 +744,23 @@ class ParentTEst(TestCase):
             last_name=data['detail']['last_name'])
         self.assertEqual(len(parents), 0)
 
-    @tag('missing_act')
-    def test_missing_act(self):
-        data = {
-            'detail': {
-                'first_name': 'P1',
-                'last_name': 'L2'
-            }
-        }
-        response = self.client.post('api/v1/parent/', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+    # @tag('missing_act')
+    # def test_missing_act(self):
+    #     data = {
+    #         'detail': {
+    #             'first_name': 'P1',
+    #             'last_name': 'L2'
+    #         }
+    #     }
+    #     response = self.client.post('api/v1/parent/', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.data, 'failed, action is required')
     
-    @tag('missing_detail')
-    def test_missing_act(self):
-        data = {
-            'act':'create'
-        }
-        response = self.client.post('api/v1/parent/', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, detail is required')
+    # @tag('missing_detail')
+    # def test_missing_act(self):
+    #     data = {
+    #         'act':'create'
+    #     }
+    #     response = self.client.post('api/v1/parent/', data, format='json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertEqual(response.data, 'failed, detail is required')

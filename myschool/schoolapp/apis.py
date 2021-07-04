@@ -9,9 +9,11 @@ from rest_framework.permissions import IsAuthenticated
 class APIUser(APIView):
     def get(self, request):
         data = request.GET.dict()
-        objs = User.objects.filter(**data)
-        serializer = UserSerializer(objs, many=True)
-        return Response('success', status=200)
+        this_user = request.user
+        objs = User.objects.filter(username=this_user)
+        obj = objs.first()
+        serializer = UserSerializer(obj, many=False)
+        return Response(serializer.data, status=200)
     
     def post(self, request): 
         data = request.data
@@ -64,11 +66,15 @@ class APISchool(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request):
         data = request.GET.dict()
-        objs = School.objects.filter(**data)
+        this_user = request.user
+        # print('---------------------', this_user)
+        objs = School.objects.filter(user=this_user)
+        obj = objs.first()
         # print('====================result', objs)
-        serializer = SchoolSerializer(objs, many=True)
-        # print('-----------------------resutl', serializer)
-        return Response('success', status=200)
+        serializer = SchoolSerializer(obj, many=False)
+        # print('------------------------qqq', serializer)
+            # print('-----------------------resutl', serializer)
+        return Response(serializer.data, status=200)
 
     def post(self, request):
         # user = User.objects.get(username='P')
@@ -149,10 +155,11 @@ class APISchool(APIView):
 class APIGrade(APIView):
     def get(self, request):
         data = request.GET.dict()
-        objs = Grade.objects.filter(**data)
+        objs = Grade.objects.filter(school__user=request.user)
+        obj = objs.first()
         # print('------------------------result', objs)
-        serializer = GradeSerializer(objs, many=True)
-        return Response('success', status=200)
+        serializer = GradeSerializer(obj, many=False)
+        return Response(serializer.data, status=200)
     
     def post(self, request):
         data = request.data
@@ -209,9 +216,10 @@ class APIGrade(APIView):
 class APIStudent(APIView):
     def get (self, request):
         data = request.GET.dict()
-        objs = Student.objects.filter(**data)
-        serializer = StudentSerializer(objs, many=True)
-        return Response('success', status=200)
+        objs = Student.objects.filter(grade__school__user=request.user)
+        obj = objs.first()
+        serializer = StudentSerializer(obj, many=False)
+        return Response(serializer.data, status=200)
     
     def post (self, request):
         data = request.data
@@ -272,9 +280,11 @@ class APIStudent(APIView):
 class APIParent(APIView):
     def get (self, request):
         data = request.GET.dict()
-        objs = Parent.objects.filter(**data)
-        serializer = ParentOutSerializer(objs, many=True)
-        return Response('success',status=200)
+        this_user = request.user
+        objs = Parent.objects.filter(director=this_user)
+        obj = objs.first()
+        serializer = ParentOutSerializer(obj, many=False)
+        return Response(serializer.data,status=200)
 
     def post(self, request):
         data = request.data
@@ -289,7 +299,16 @@ class APIParent(APIView):
             objs = Parent.objects.filter(first_name=first_name, last_name=last_name)
             if objs.exists():
                 return Response('duplicated parent', status=400)
+            
+            #make another action --> create children
+            # # children_f = Student.objects.filter(first_name=detail['first_name'], last_name=detail['last_name'], nick_name=detail['nick_name'])
+            # childrens = Student(first_name=detail['first_name'], last_name=detail['last_name'], nick_name=detail['nick_name'])
+            # childrens.save()
+            
+            # p1 = Parent (first_name=first_name, last_name=last_name)
+            # p1.save()
 
+            # p1.children.add(childrens)
 
             serializer = ParentInSerializer(data=detail, many=False)
             if serializer.is_valid():
