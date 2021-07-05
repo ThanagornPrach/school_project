@@ -67,13 +67,20 @@ class APISchool(APIView):
     def get(self,request):
         data = request.GET.dict()
         this_user = request.user
-        # print('---------------------', this_user)
+        # print('---------------------', this_user.pk)
+
         objs = School.objects.filter(user=this_user)
+        # print('-------------------------', objs)
+        # print('len all objs in this user', len(objs))
+        # abcs = objs.filter(name='abc')
+        # print('len abc in this user', len(abcs))
+
         obj = objs.first()
-        # print('====================result', objs)
+        # ans = obj.name
+        # print('description of schools=', ans)
+
+        # obj = objs.first()
         serializer = SchoolSerializer(obj, many=False)
-        # print('------------------------qqq', serializer)
-            # print('-----------------------resutl', serializer)
         return Response(serializer.data, status=200)
 
     def post(self, request):
@@ -86,6 +93,7 @@ class APISchool(APIView):
         data = request.data
         act = data.get('act')
         detail = data.get('detail')
+
         if act == 'create':
             detail.update({
                 'user':request.user.pk
@@ -146,19 +154,57 @@ class APISchool(APIView):
         
         if act == 'delete':
             this_user = request.user
-            delete_schools = School.objects.filter(user=request.user).delete()
-            return Response('delete success', status=200)
-        else:
-            return Response('unable to delete', status=400)
+            schools = School.objects.filter(user=request.user)
+            delete_school = schools.delete()
+            if not schools.exists():
+                return Response('delete success', status=200)
+            else:
+                return Response('unable to delete', status=400)
 
+        return Response('no act', status=400)     
+
+class APIAllStudent(APIView):
+    model = Student
+    serializer = StudentOnlyNameSerializer
+    def get(self, request):
+        objs = self.model.objects.all()
+        ser = self.serializer(objs, many=True)
+        return Response(ser.data, status=200)
+
+# class APIAllSchoolDescription(APIView):
+#     model = School
+#     serializer = SchoolOnlyDescriptionSerializer
+#     def get(self, request):
+#         objs = self.model.objects.all()
+#         ser = self.serializer(objs, many=True)
+#         return Response(ser.data, status=200)
 
 class APIGrade(APIView):
     def get(self, request):
         data = request.GET.dict()
         objs = Grade.objects.filter(school__user=request.user)
+        # print('-------------------------', objs)
         obj = objs.first()
+
         # print('------------------------result', objs)
+
+        # # ver1
+        # for obj in objs:
+        #     school_pk = obj.school.pk
+        #     school_obj = School.objects.get(pk=school_pk)
+        #     obj.school_name = school_obj.name
+
+        # # ver2
+        # obj = objs.first()
+        # school_pk = obj.school.pk
+        # school_obj = School.objects.get(pk=school_pk)
+
+        # for obj in objs:
+        #     obj.school_name = school_obj.name
         serializer = GradeSerializer(obj, many=False)
+        # data_out = serializer.data
+        # print('xxx--',data_out, type(data_out))
+        # 1/0
         return Response(serializer.data, status=200)
     
     def post(self, request):
@@ -316,6 +362,18 @@ class APIParent(APIView):
                 return Response('create success', status=200)
             else:
                 return Response(serializer.errors, status=400)
+        
+        if act == 'add children':
+            children_add = Student(first_name='first_name', last_name='last_name', nick_name='nick_name')
+            children_add.save()
+            
+            p1 = Parent(first_name='first_name', last_name='last_name')
+            p1.save()
+
+            p1.children.add(children_add)
+            
+            return Response('children added', status=200)
+            
         
         if act == 'update':
             this_user = request.user

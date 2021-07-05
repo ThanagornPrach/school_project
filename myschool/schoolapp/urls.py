@@ -7,5 +7,6 @@ urlpatterns = [
     path('grade/', APIGrade.as_view()),
     path('student/', APIStudent.as_view()),
     path('parent/', APIParent.as_view()),
-    path('user/', APIUser.as_view())
+    path('user/', APIUser.as_view()),
+    path('get-all-student-name/', APIAllStudent.as_view())
 ]

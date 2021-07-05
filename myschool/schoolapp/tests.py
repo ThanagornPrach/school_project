@@ -150,17 +150,17 @@ class BasicTest(TestCase):
         # user__username='test'
         self.assertEqual(len(schools), 1)
 
-    # @tag('missing_act_school')
-    # def test_missing_act(self):
-    #     data = {
-    #         'detail': {
-    #             'name': 'A',
-    #             'description': 'description A'
-    #         }
-    #     }
-    #     response = self.client.post('/api/v1/school/', data, format='json')
-    #     self.assertEqual(response.status_code, 400)
-    #     self.assertEqual(response.data, 'failed, action is required')
+    @tag('missing_act_school')
+    def test_missing_act(self):
+        data = {
+            'detail': {
+                'name': 'A',
+                'description': 'description A'
+            }
+        }
+        response = self.client.post('/api/v1/school/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, action is required')
 
     @tag('get_school')
     def test_get_school(self):
@@ -743,6 +743,36 @@ class ParentTEst(TestCase):
             first_name=data['detail']['first_name'], 
             last_name=data['detail']['last_name'])
         self.assertEqual(len(parents), 0)
+
+    @tag('add_children')
+    def test_add_children(self):
+        obj = Parent.objects.create(
+            first_name='F1',
+            last_name='L1',
+            director=self.new_user)
+        
+        p1 = obj.children.add(self.children)
+
+       
+        data = {
+            'act': 'add children',
+            'children_name': {
+                'first_name': str(self.children.first_name),
+                'last_name': str(self.children.last_name),
+                'nick_name': str(self.children.nick_name),
+            }    
+        }
+        response = self.client.post('/api/v1/parent/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'children added')
+
+        # children = Parent.objects.filter(
+        #     first_name=data['detail']['first_name'], 
+        #     last_name=data['detail']['last_name'],
+        #     nick_name=data['detail']['nick_name'])
+        # self.assertEqual(len(children), 1)
+
+
 
     # @tag('missing_act')
     # def test_missing_act(self):

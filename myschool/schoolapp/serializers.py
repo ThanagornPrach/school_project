@@ -6,19 +6,34 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'password']
+        # exclude = ['id']
 
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
         # fields = ['name', 'description']
         fields = '__all__'
+        # exclude = ['id']
 
 class GradeSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(max_length=255)
+
     class Meta:
         model = Grade
         # fields = ['name', 'description']
         fields = '__all__'
 
+    # @property
+    # def data(self):
+    #     ret = super(Serializer, self).data
+    #     print('----ret', ret, type(ret))
+    #     return ReturnDict(ret, serializer=self)
+
+    # def __init__(self, *args, **kwargs):
+    #     self.serializer = kwargs.pop('serializer')
+    #     super(ReturnDict, self).__init__(*args, **kwargs)
+
+        
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
@@ -36,4 +51,13 @@ class ParentOutSerializer(serializers.ModelSerializer): #Out = show to the user
     class Meta:
         model = Parent
         fields = '__all__'
+
+# class StudentOnlyNameSerializer( serializers.ModelSerializer):
+#     class Meta:
+#         model = Student
+#         fields = ['grade', ]
+# class SchoolOnlyDescriptionSerializer( serializers.ModelSerializer):
+#     class Meta:
+#         model = School
+#         fields = ['description', ]
 
