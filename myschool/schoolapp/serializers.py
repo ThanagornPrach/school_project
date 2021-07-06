@@ -16,7 +16,7 @@ class SchoolSerializer(serializers.ModelSerializer):
         # exclude = ['id']
 
 class GradeSerializer(serializers.ModelSerializer):
-    school_name = serializers.CharField(max_length=255)
+    # school_name = serializers.CharField(max_length=255)
 
     class Meta:
         model = Grade

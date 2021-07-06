@@ -1,7 +1,9 @@
 from django.contrib import admin
 from .models import *
 
-admin.site.register(School)
+@admin.register(School)
+class SchoolAdmin(admin.ModelAdmin):
+    list_display = ['user','name', 'description']
 
 @admin.register(Grade)
 class GradeAdmin(admin.ModelAdmin):

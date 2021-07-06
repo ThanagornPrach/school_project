@@ -1,3 +1,4 @@
+from django.http import response
 from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -161,15 +162,15 @@ class APISchool(APIView):
             else:
                 return Response('unable to delete', status=400)
 
-        return Response('no act', status=400)     
+        return Response('failed, action is required', status=400)     
 
-class APIAllStudent(APIView):
-    model = Student
-    serializer = StudentOnlyNameSerializer
-    def get(self, request):
-        objs = self.model.objects.all()
-        ser = self.serializer(objs, many=True)
-        return Response(ser.data, status=200)
+# class APIAllStudent(APIView):
+#     model = Student
+#     serializer = StudentOnlyNameSerializer
+#     def get(self, request):
+#         objs = self.model.objects.all()
+#         ser = self.serializer(objs, many=True)
+#         return Response(ser.data, status=200)
 
 # class APIAllSchoolDescription(APIView):
 #     model = School
@@ -252,11 +253,17 @@ class APIGrade(APIView):
             # return ...
         
         if act == 'delete':
-            delete_grades = Grade.objects.filter(name=data['detail']['name'], description=data['detail']['description'], school__user=request.user).delete()
-            # delete_schools = School.objects.filter(user=request.user).delete()
-            return Response('delete success', status=200)
-        else:
-            return Response('unable to delete', status=400)
+            grades = Grade.objects.filter(
+                name=data['detail']['name'], 
+                description=data['detail']['description'], 
+                school__user=request.user)
+            delete_schools = grades.delete()
+            if not grades.exists():
+                return Response('delete success', status=200)
+            else:
+                return Response('unable to delete', status=400)
+        
+        return Response('failed, action is required', status=400)
             
 
 class APIStudent(APIView):
@@ -312,15 +319,19 @@ class APIStudent(APIView):
             return Response('update success', status=200)
         
         if act == 'delete':
-            delete_students = Student.objects.filter(
+            students = Student.objects.filter(
                 first_name=data['detail']['first_name'], 
                 last_name=data['detail']['last_name'], 
                 nick_name=data['detail']['nick_name'],
-                grade__school__user=request.user).delete()
+                grade__school__user=request.user)
+            delete_student = students.delete()
+            if not students.exists():
+                return Response('delete success', status=200)
             # delete_schools = School.objects.filter(user=request.user).delete()
-            return Response('delete success', status=200)
-        else:
-            return Response('unable to delete', status=400)
+            else:
+                return Response('unable to delete', status=400)
+        
+        return Response('failed, action is required', status=400)
 
 
 class APIParent(APIView):
@@ -364,15 +375,22 @@ class APIParent(APIView):
                 return Response(serializer.errors, status=400)
         
         if act == 'add children':
-            children_add = Student(first_name='first_name', last_name='last_name', nick_name='nick_name')
-            children_add.save()
-            
-            p1 = Parent(first_name='first_name', last_name='last_name')
-            p1.save()
+            this_user = request.user
+            data = request.data
+            parents = Parent.objects.filter(director=this_user)
+            # parent = parents.first().id
+            print('---------------------------22', parents)
 
-            p1.children.add(children_add)
+            students = Student.objects.filter(
+                first_name=data['detail']['first_name'],
+                last_name=data['detail']['last_name'],
+                nick_name=data['detail']['nick_name'],)
+            print('-------------------------11', students)
+
+            adding = parents.children.add(students)
             
             return Response('children added', status=200)
+            
             
         
         if act == 'update':
@@ -393,11 +411,14 @@ class APIParent(APIView):
         
         if act == 'delete':
             this_user = request.user
-            delete_parents = Parent.objects.filter(
+            parents = Parent.objects.filter(
                 first_name=data['detail']['first_name'], 
                 last_name=data['detail']['last_name'], 
-                director=this_user).delete()
-            # delete_schools = School.objects.filter(user=request.user).delete()
-            return Response('delete success', status=200)
-        else:
-            return Response('unable to delete', status=400)
+                director=this_user)
+            delete_schools = parents.delete()
+            if not parents.exists():
+                return Response('delete success', status=200)
+            else:
+                return Response('unable to delete', status=400)
+        
+        return Response('failed, action is required', status=400)
