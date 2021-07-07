@@ -265,7 +265,6 @@ class APIGrade(APIView):
         
         return Response('failed, action is required', status=400)
             
-
 class APIStudent(APIView):
     def get (self, request):
         data = request.GET.dict()
@@ -311,7 +310,6 @@ class APIStudent(APIView):
             if  objs.exists():
                 return Response('duplicated student', status=400)
 
-
             if not students.exists():
                 return Response('unable to update', status=400)
     
@@ -324,7 +322,7 @@ class APIStudent(APIView):
                 last_name=data['detail']['last_name'], 
                 nick_name=data['detail']['nick_name'],
                 grade__school__user=request.user)
-            delete_student = students.delete()
+            students.delete()
             if not students.exists():
                 return Response('delete success', status=200)
             # delete_schools = School.objects.filter(user=request.user).delete()
@@ -374,24 +372,77 @@ class APIParent(APIView):
             else:
                 return Response(serializer.errors, status=400)
         
+        # if act == 'add children':
+        #     this_user = request.user
+        #     # print('--------------------------ss', this_user)
+        #     data = request.data
+            
+
+        #     parents = Parent.objects.filter(
+        #         pk=data['parent'],
+        #         director=request.user)
+
+        #     parent = parents.first()
+            
+
+        #     students = Student.objects.filter(
+        #         pk=data['children'],
+        #         grade__school__user=request.user)
+            
+        #     student = students.first()
+
+          
+            
+        #     return Response('children added', status=200)
+
         if act == 'add children':
-            this_user = request.user
             data = request.data
-            parents = Parent.objects.filter(director=this_user)
-            # parent = parents.first().id
-            print('---------------------------22', parents)
+            '''  
+            this is the data format
+            {
+                "act": "add children",
+                "parent_pk": "pk",
+                "children_pk": [{"pk": "1"}, {"pk": "17"}, {"pk": "10"}]
+            }
+            '''
 
-            students = Student.objects.filter(
-                first_name=data['detail']['first_name'],
-                last_name=data['detail']['last_name'],
-                nick_name=data['detail']['nick_name'],)
-            print('-------------------------11', students)
+            try:
+                parent_pk = data['parent_pk']
+                children_pk = data['children_pk']
+                try:
+                    parent_pk = int(parent_pk)
+                except:
+                    return Response('incorrect parent_pk', status=400)
+            except:
+                return Response('no parent_pk or children_pk', status=400)
+            
+            # check parent is ready?
+            parents = Parent.objects.filter(pk=parent_pk, director=request.user)
+            if not parents.exists():
+                return Response('incorrect parent pk', status=400)
+            parent = parents.first()
+            
+            # check children is ready
+            ready_children = []
+            for child in children_pk:
+                try:
+                    child_pk = child['pk']
+                except:
+                    return Response('incorrect format', status=400)
+                childs = Student.objects.filter(pk=child_pk, grade__school__user=request.user)
+                if not childs.exists():
+                    return Response('incorrect child pk', status=400)
+                
+                child = childs.first()
+                ready_children.append(child)
 
-            adding = parents.children.add(students)
+            # add children to parent
+            count = 0
+            for child in ready_children:
+                parent.children.add(child)
+                count += 1
             
-            return Response('children added', status=200)
-            
-            
+            return Response('added %d child to parent'%count, status=200)
         
         if act == 'update':
             this_user = request.user
@@ -415,10 +466,8 @@ class APIParent(APIView):
                 first_name=data['detail']['first_name'], 
                 last_name=data['detail']['last_name'], 
                 director=this_user)
-            delete_schools = parents.delete()
             if not parents.exists():
-                return Response('delete success', status=200)
-            else:
-                return Response('unable to delete', status=400)
-        
+                return Response('no parent', status=400)
+            parents.delete()
+            
         return Response('failed, action is required', status=400)

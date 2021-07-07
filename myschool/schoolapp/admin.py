@@ -13,7 +13,9 @@ class GradeAdmin(admin.ModelAdmin):
 
 @admin.register(Parent)
 class ParentAdmin(admin.ModelAdmin):
-	list_display = ['director','first_name', 'last_name']
+	list_display = ['director','first_name', 'last_name', 'pk']
 
-admin.site.register(Student)
+@admin.register(Student)
+class StudentAdmin(admin.ModelAdmin):
+	list_display = ['pk','first_name', 'last_name']
 

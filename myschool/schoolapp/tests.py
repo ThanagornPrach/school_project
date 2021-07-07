@@ -572,12 +572,13 @@ class StudentTest(TestCase):
 
 
 @tag('parent')
-class ParentTEst(TestCase):
+class ParentTest(TestCase):
     def setUp(self):
         self.new_user = User.objects.create_user(username='test', password='test')
         self.token = Token.objects.create(user=self.new_user)
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
 
         self.school = School.objects.create(
         name='school A',
@@ -589,7 +590,7 @@ class ParentTEst(TestCase):
             description='description 1',
             school=self.school
         )
-        self.children = Student.objects.create(
+        self.child = Student.objects.create(
             first_name='F1',
             last_name='L1',
             nick_name='N1',
@@ -738,38 +739,88 @@ class ParentTEst(TestCase):
             last_name=data['detail']['last_name'])
         self.assertEqual(len(parents), 0)
 
+    # @tag('add_children')
+    # def test_add_children(self):
+    #     obj = Parent.objects.create(
+    #         first_name='F1',
+    #         last_name='L1',
+    #         director=self.new_user)
+
+    #     data = {
+    #         'act': 'add children',
+    #         'parent': str(obj.pk),
+    #         'children': str(self.child.pk)
+    #     }
+    #     response = self.client.post('/api/v1/parent/', data, format='json')
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(response.data, 'children added')
+
+    #     parents = Parent.objects.filter(pk=obj.pk, director=self.new_user)
+    #     self.assertEqual(len(parents), 1)
+
+    #     # check whether there is a child in parent --> the child must be correct according to the parent's input 
+    #     parent = parents.first()
+    #     children = parent.children.all()
+    #     child = children.filter(pk=data['children'])
+    #     self.assertEqual(len(child), 1)
     @tag('add_children')
     def test_add_children(self):
-        obj = Parent.objects.create(
-            first_name='F1',
-            last_name='L1',
-            director=self.new_user)
-        
-        p1 = obj.children.add(self.children)
+        # setup
+        parent = Parent.objects.create(
+            director = self.new_user,
+            first_name = 'john',
+        )
+        children = []
+        for name in ['sam1', 'sam2', 'sam3', 'sam4', 'sam5']:
+            child = Student.objects.create(
+                grade = self.grade,
+                first_name = name,
+            )
+            children.append(child)
 
-       
+        _ = Parent.objects.all()
+        self.assertTrue(len(_) >= 1)
+        _ = Student.objects.all()
+        self.assertTrue(len(_) >= 5)
+
+        '''
+        create list_children_pk
+        [
+            {
+                'pk': '1'
+            },
+
+            {
+                'pk': '3'
+            },
+
+            {
+                'pk': '5'
+            }
+        ]
+        '''
+        children_pk = []
+        for child in children[:2]:
+            _ = {
+                'pk': str(child.pk)
+            }
+            children_pk.append(_)
+
+        # post data
         data = {
             'act': 'add children',
-            'parent': {
-                'first_name': str(obj.first_name),
-                'last_name': str(obj.last_name)
-            },
-            'detail': {
-                'first_name': str(self.children.first_name),
-                'last_name': str(self.children.last_name),
-                'nick_name': str(self.children.nick_name),
-            }    
+            'parent_pk' : str(parent.pk),
+            'children_pk': children_pk,
         }
         response = self.client.post('/api/v1/parent/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'children added')
+        self.assertTrue(response.status_code == 200)
 
-        children = Parent.objects.filter(
-            first_name=data['parent']['first_name'], 
-            last_name=data['parent']['last_name'],).filter(children=self.children)
-        self.assertEqual(len(children), 1)
-
-
+        # check children in parent
+        parent = Parent.objects.get(pk=data['parent_pk'])
+        children = parent.children.all()
+        self.assertTrue(len(children) == 2)
+        self.assertTrue(children[0].first_name == 'sam1')
+        self.assertTrue(children[1].first_name == 'sam2')
 
     @tag('missing_act_parent')
     def test_missing_act(self):

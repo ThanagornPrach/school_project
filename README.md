@@ -188,15 +188,8 @@ Post /api/v1/parent/
 ```json
 {
     "act": "add children",
-    "parent": {
-        "first_name": "parent_name",
-        "last_name": "parent_last_name"
-    },
-    "detail": {
-        "first_name": "tom",
-        "last_name": "tomus",
-        "nick_name": "tom-tom"
-    }
+    "parent_pk": "pk",
+    "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
 }
 
 # update parent
