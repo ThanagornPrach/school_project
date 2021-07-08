@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 class APIUser(APIView):
     def get(self, request):
-        data = request.GET.dict()
+        # data = request.GET.dict()
         this_user = request.user
         objs = User.objects.filter(username=this_user)
         obj = objs.first()
@@ -51,12 +51,13 @@ class APIUser(APIView):
             if not users.exists():
                 return Response('unable to update', status=400)
             
-            users.update(**data['detail'])
+            users.update(**request.data['detail'])
             return Response('update success', status=200)
         
         if act == 'delete':
             this_user = request.user
-            delete_user = User.objects.filter(username=this_user).delete()
+            users = User.objects.filter(username=this_user)
+            users.delete()
             return Response('delete success', status=200)
         else:
             return Response('unable to delete', status=400)
@@ -156,7 +157,8 @@ class APISchool(APIView):
         if act == 'delete':
             this_user = request.user
             schools = School.objects.filter(user=request.user)
-            delete_school = schools.delete()
+            print('----------------------------11', schools)
+            schools.delete()
             if not schools.exists():
                 return Response('delete success', status=200)
             else:
@@ -243,7 +245,7 @@ class APIGrade(APIView):
             if not grades.exists():
                 return Response('unable to update', status=400)
             
-            grades.update(**data['detail'])
+            grades.update(**request.data['detail'])
             return Response('update success', status=200)
             # print('---',data)
             # print('----data[pk]', data['pk'])
@@ -302,6 +304,7 @@ class APIStudent(APIView):
                 last_name=data['old_last_name'],
                 nick_name=data['old_nick_name'], 
                 grade__school__user=request.user)
+            print('----------------------',students)
             #check duplicate
             first_name = detail['first_name']
             last_name = detail['last_name']
@@ -462,12 +465,17 @@ class APIParent(APIView):
         
         if act == 'delete':
             this_user = request.user
+            print('---------------------33', this_user)
             parents = Parent.objects.filter(
                 first_name=data['detail']['first_name'], 
                 last_name=data['detail']['last_name'], 
                 director=this_user)
+            
+            print('--------------------------------22', parents)
             if not parents.exists():
                 return Response('no parent', status=400)
+            
             parents.delete()
+            return Response('delete success', status=200)
             
         return Response('failed, action is required', status=400)

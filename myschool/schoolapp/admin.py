@@ -17,5 +17,5 @@ class ParentAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-	list_display = ['pk','first_name', 'last_name']
+	list_display = ['pk','first_name', 'last_name', 'nick_name']
 

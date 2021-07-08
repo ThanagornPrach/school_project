@@ -641,8 +641,6 @@ class ParentTest(TestCase):
             director=self.new_user,
         )
 
-        p1 = obj.children.add(self.children)
-
         detail = {
             'first_name': 'P1',
             'last_name': 'L1'
@@ -661,8 +659,6 @@ class ParentTest(TestCase):
             last_name='L1',
             director=self.new_user,
         )
-
-        p1 = obj.children.add(self.children)
         
         detail = {
             'first_name': 'P2',
@@ -692,7 +688,7 @@ class ParentTest(TestCase):
             director=self.new_user
         )
 
-        p1 = obj.children.add(self.children)
+        p1 = obj.children.add(self.child)
 
         detail = {
             'first_name': 'P1',
@@ -714,8 +710,7 @@ class ParentTest(TestCase):
             last_name='L1',
             director=self.new_user)
         
-        p1 = obj.children.add(self.children)
-
+        print('=======================45', obj)
 
         detail = {
             'first_name': 'F1',
@@ -728,9 +723,10 @@ class ParentTest(TestCase):
             'detail': detail
         }
 
-        delete_student = obj.delete()
+        # obj.delete() --> if we put this here, in the test, it will delete the queryset before it goes to the api, then that will result in failure 400
 
         response = self.client.post('/api/v1/parent/', data, format='json')
+        # print('--------------------------11',response.data )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'delete success')
 
@@ -783,22 +779,22 @@ class ParentTest(TestCase):
         _ = Student.objects.all()
         self.assertTrue(len(_) >= 5)
 
-        '''
-        create list_children_pk
-        [
-            {
-                'pk': '1'
-            },
+        # '''
+        # create list_children_pk
+        # [
+        #     {
+        #         'pk': '1'
+        #     },
 
-            {
-                'pk': '3'
-            },
+        #     {
+        #         'pk': '3'
+        #     },
 
-            {
-                'pk': '5'
-            }
-        ]
-        '''
+        #     {
+        #         'pk': '5'
+        #     }
+        # ]
+        # '''
         children_pk = []
         for child in children[:2]:
             _ = {

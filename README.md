@@ -48,7 +48,7 @@ Post /api/v1/user/
 POST /api/v1/school/
 ```json
 {
-	"act": "create",
+    "act": "create",
     "detail": {
         "name": "school a",
         "description": "this is description"
@@ -77,7 +77,7 @@ GET/ api/v1/school/
 POST /api/v1/school/
 ```json
 {
-	"act": "delete",
+    "act": "delete",
     "detail": {
         "name": "school a",
         "description": "this is description"
@@ -191,6 +191,7 @@ Post /api/v1/parent/
     "parent_pk": "pk",
     "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
 }
+```
 
 # update parent
 POST /api/v1/parent/
