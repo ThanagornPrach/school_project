@@ -91,8 +91,8 @@ POST /api/v1/grade/
 {
     "act": "create",
     "detail": {
-        "name": "1",
-        "detail": "this is description"
+        "name": [{"name":"1"}, {"name":"17"}, {"name": "10"}],
+        "description": "this is description"
     }
 }
 ```

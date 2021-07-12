@@ -276,13 +276,23 @@ class GradeTest(TestCase):
     
     @tag('create_grade')
     def test_create_grade(self):
+        grade_name = []
+        for n_grade in ['m1', 'm2', 'm3']:
+            grade_s = Grade.objects.create(
+                name=n_grade,
+                school=self.school
+            )
+            grade_name.append(grade_s)
+
         data = {
             'act': 'create',
             'detail': {
-                'name': '1',
+                'name': str(grade_name),
                 'description': 'description 1'
             }
         }
+        # [{"name":"1"}, {"name":"17"}, {"name": "10"}],
+        print('-------------------------------ww', data)
         response = self.client.post('/api/v1/grade/', data, format='json')
         print('------------------------aaa', response.data)
         self.assertEqual(response.status_code, 200)
@@ -292,6 +302,34 @@ class GradeTest(TestCase):
         grades = Grade.objects.filter(name=data['detail']['name'], description=data['detail']['description'], school=self.school)
         # print('------------------------------aaaa', grades)
         self.assertEqual(len(grades), 1)
+
+    # @tag('create_grade')
+    # def test_create_grade(self):
+    #     grade_name = []
+    #     for i in ['m1', 'm2', 'm3']:
+    #         gradeses = Grade.objects.create(
+    #             name=i,
+    #             school=self.school
+    #         )
+    #         grade_name.append(gradeses)
+
+    #     check_g = Grade.objects.all()
+    #     self.assertTrue(len(check_g), 3) 
+
+    #     data = {
+    #         'act': 'create',
+    #         'detail': {
+    #             'name': grade_name,
+    #             'description': 'description 1'
+    #         }
+    #     }
+    #     response = self.client.post('/api/v1/grade/', data, format='json')
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(response.data, 'create success')
+
+        # grades = Grade.objects.filter(name=data['detail']['name'], description=data['detail']['description'], school=self.school)
+        # # print('------------------------------aaaa', grades)
+        # self.assertEqual(len(grades), 1)
 
     @tag('missing_act_grade')
     def test_missing_act(self):

@@ -172,6 +172,7 @@ class APISchool(APIView):
 #     def get(self, request):
 #         objs = self.model.objects.all()
 #         ser = self.serializer(objs, many=True)
+#         print('---------------------------hhh', type(objs))
 #         return Response(ser.data, status=200)
 
 # class APIAllSchoolDescription(APIView):
@@ -214,24 +215,31 @@ class APIGrade(APIView):
         data = request.data
         act = data.get('act')
         detail = data.get('detail')
+        print('---------------------------eee',detail)
         if act == 'create':
             detail.update({
                 'school': School.objects.get(user=request.user).pk
             })
-            # print('----------------------------' check type)
+            print('------------------------yy',detail)
+
             name = detail['name']
-            objs = Grade.objects.filter(name=name)
+            objs = Grade.objects.filter(name=name, school__user=request.user)
             if objs.exists():
                 return Response('duplicated grade', status=400)
-
-
-            serializer = GradeSerializer(data=detail, many=False)
+            
+            print('----------------------123')
+            name_list = []
+            for k,v in detail.items():
+               name_list.append((k,v))
+                
+            print('---------------------------------dfdfdf', type(detail))
+            serializer = GradeSerializer(data= [{'name': 'grade1', 'description': 'des1'}, {'name': 'grade2', 'description': 'des2'}], many=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response('create success', status=200)
             else:
-                print('--------------------------qqqq')
                 return Response(serializer.errors, status=400)
+
 
         if act == 'update':
             grades = Grade.objects.filter(name=data['old name'], school__user=request.user)
