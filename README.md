@@ -95,7 +95,28 @@ POST /api/v1/grade/
         "description": "this is description"
     }
 }
+
 ```
+
+<!-- modified
+```json
+{
+    "act": "create",
+    "detail": [{
+        "name": "1",
+        "description": "des1"
+    },
+    {
+        "name": "2",
+        "description": "des2"
+    },
+    {
+        "name": "3",
+        "description": "des3"
+    }]
+}
+``` -->
+
 
 # update grade
 POST /api/v1/grade/

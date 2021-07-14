@@ -168,3 +168,12 @@
 # assert solution.test_case("(([]){})") == True
 # print('success')
 
+# def test_key(f_arg, pos_arg, *args, **kk):
+#     print('my name is:', f_arg)
+#     print(len(args), 'len args')
+#     print(len(kk), 'len kk')
+#     print('---kk', kk)
+#     for arg in args:
+#         print('I am a', arg)
+
+# test_key('o', 'dog', 'bird', 'cat')

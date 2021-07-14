@@ -217,28 +217,62 @@ class APIGrade(APIView):
         detail = data.get('detail')
         print('---------------------------eee',detail)
         if act == 'create':
-            detail.update({
-                'school': School.objects.get(user=request.user).pk
-            })
-            print('------------------------yy',detail)
+            """
+            # create grade
+            POST /api/v1/grade/
+            ```json
+                "act": "create",
+                "detail": {
+                    "namessssss": [{"name":"1"}, {"name":"17"}, {"name": "10"}],
+                    "description": "this is description"
+                }
+            }
+            ```
+            """
+            schools = School.objects.filter(user=request.user)
+            # we can use schools.first or the method below
 
-            name = detail['name']
-            objs = Grade.objects.filter(name=name, school__user=request.user)
-            if objs.exists():
-                return Response('duplicated grade', status=400)
+            # user has no school
+            if len(schools) ==1:
+                school = schools[0]
+            else:
+                return Response('user has no school', status=400)
             
-            print('----------------------123')
-            name_list = []
-            for k,v in detail.items():
-               name_list.append((k,v))
-                
-            print('---------------------------------dfdfdf', type(detail))
-            serializer = GradeSerializer(data= [{'name': 'grade1', 'description': 'des1'}, {'name': 'grade2', 'description': 'des2'}], many=True)
+            print('---------------------s', school)
+
+            description = detail['description']
+            objs = []
+            count = 0
+            # [(k, v), (k, v), (k, v)]
+            for name in detail['name']:
+                print('\n\n----------------------------',count)
+                print(count, '----name', name)
+
+                x555 = {
+                    'school': school.pk,
+
+                    'name': name['name'],
+                    'description': description,
+                }
+
+                # obj.update({
+                #     'school': school
+                # })
+
+                print(count, '---- obj', x555)
+                objs.append(x555)
+                print(count, '---- objs []', objs)
+                count += 1
+            # [{'school':pk_of_choull', 'name': 'grade1', 'description': 'des1'}, {'name': 'grade2', 'description': 'des2'}]
+            print('xxx--------------objs=',objs)
+            11/0
+            serializer = GradeSerializer(data=objs, many=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response('create success', status=200)
+                return Response('create %d success'%count, status=200)
             else:
                 return Response(serializer.errors, status=400)
+
 
 
         if act == 'update':

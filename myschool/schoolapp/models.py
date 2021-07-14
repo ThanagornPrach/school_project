@@ -76,7 +76,7 @@ class School(models.Model):
 class Grade(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True)
 
-    name = models.CharField(max_length=20, null=True)
+    name = models.CharField(max_length=200, null=True)
     description = models.CharField(max_length=255, null=True)
     def __str__(self):
         return str(self.name)

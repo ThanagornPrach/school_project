@@ -15,13 +15,15 @@ class SchoolSerializer(serializers.ModelSerializer):
         fields = '__all__'
         # exclude = ['id']
 
+
 class GradeSerializer(serializers.ModelSerializer):
     # school_name = serializers.CharField(max_length=255)
-
+    # name = serializers.JSONField()
     class Meta:
         model = Grade
         # fields = ['name', 'description']
         fields = '__all__'
+
 
     # @property
     # def data(self):
