@@ -276,32 +276,29 @@ class GradeTest(TestCase):
     
     @tag('create_grade')
     def test_create_grade(self):
-        grade_name = []
-        for n_grade in ['m1', 'm2', 'm3']:
-            grade_s = Grade.objects.create(
-                name=n_grade,
-                school=self.school
-            )
-            grade_name.append(grade_s)
-
         data = {
             'act': 'create',
             'detail': {
-                'name': str(grade_name),
+                'names': ['1','2','3'],
                 'description': 'description 1'
             }
         }
-        # [{"name":"1"}, {"name":"17"}, {"name": "10"}],
+        
+        count = 0 
+        for names in data['detail']['names']:
+            count += 1 
+        
         print('-------------------------------ww', data)
         response = self.client.post('/api/v1/grade/', data, format='json')
         print('------------------------aaa', response.data)
         self.assertEqual(response.status_code, 200)
         # print('------------------------------------')
-        self.assertEqual(response.data, 'create success')
+        self.assertEqual(response.data, 'create %d success'%count)
 
-        grades = Grade.objects.filter(name=data['detail']['name'], description=data['detail']['description'], school=self.school)
+        grades = Grade.objects.all() #since we let the user create list, we have to check every queryset as it of the user.
+
         # print('------------------------------aaaa', grades)
-        self.assertEqual(len(grades), 1)
+        self.assertEqual(len(grades), 3)
 
     # @tag('create_grade')
     # def test_create_grade(self):
@@ -353,18 +350,19 @@ class GradeTest(TestCase):
     @tag('duplicate_create_grade')
     def test_create_duplicate_grade(self):
         obj = Grade.objects.create(
-            name='1', 
+            name=['1','2','3'], 
             description='description 1', 
             school=self.school
         )
 
+        print('-==========================dd', type(obj))
         detail = {
-            'name': '1',
-            'detail': 'description 1'
+            'names': ['1','2','3'],
+            'description': 'description 1'
         }
+        print('=======================66')
         data = {
             'act':'create',
-            # 'pk': str(obj.pk),
             'detail':detail
             }
         response = self.client.post('/api/v1/grade/', data, format='json')
@@ -431,7 +429,7 @@ class GradeTest(TestCase):
             'detail': detail
         }
 
-        delete_grade = obj.delete()
+        obj.delete()
 
         response = self.client.post('/api/v1/grade/', data, format='json')
         self.assertEqual(response.status_code, 200)
@@ -478,6 +476,7 @@ class StudentTest(TestCase):
             last_name=data['detail']['last_name'], 
             nick_name=data['detail']['nick_name'],
             grade=self.grade)
+        print(students)
         self.assertEqual(len(students), 1)
     
     @tag('get_student')

@@ -101,7 +101,7 @@ class APISchool(APIView):
                 'user':request.user.pk
             })
             name = detail['name']
-            objs = School.objects.filter(name=name)
+            objs = School.objects.filter(name=name, user=request.user)
             if objs.exists():
                 return Response ('duplicated school', status=400)
 
@@ -213,7 +213,12 @@ class APIGrade(APIView):
     
     def post(self, request):
         data = request.data
+        for k in ['act', 'detail']:
+            if k not in data.keys():
+                return Response('no %s'%k, status=400)
         act = data.get('act')
+        # print('-----------------ko',act)
+        # 15/0
         detail = data.get('detail')
         print('---------------------------eee',detail)
         if act == 'create':
@@ -229,43 +234,58 @@ class APIGrade(APIView):
             }
             ```
             """
+            # print('----------------------dfd', detail['names'])
+            # 12/0
             schools = School.objects.filter(user=request.user)
             # we can use schools.first or the method below
 
             # user has no school
-            if len(schools) ==1:
+            if len(schools) == 1:
                 school = schools[0]
             else:
                 return Response('user has no school', status=400)
+
+            names = detail['names']
+            # print('---------------------------ss', names)
+            # 11/0
+            # query_names = Grade.objects.filter(name=names)
+            # if query_names.exists():
+            #     return Response('duplicated name', status=400)
             
-            print('---------------------s', school)
+            for name in names:
+                print('---------------------------i', name)
+                query_names = Grade.objects.filter(name=name, school__user=request.user)
+                print('----------------------er', names)
+                print('-------------------------o', query_names)
+                if query_names.exists():
+                    return Response('duplicated name', status=400)
 
             description = detail['description']
+            print('--------------------------123', description)
             objs = []
             count = 0
             # [(k, v), (k, v), (k, v)]
-            for name in detail['name']:
+            for name in detail['names']:
                 print('\n\n----------------------------',count)
                 print(count, '----name', name)
 
-                x555 = {
+                obj = {
                     'school': school.pk,
 
-                    'name': name['name'],
+                    'name': name,
                     'description': description,
                 }
-
                 # obj.update({
                 #     'school': school
                 # })
 
-                print(count, '---- obj', x555)
-                objs.append(x555)
+                print(count, '---- obj', obj)
+                objs.append(obj)
                 print(count, '---- objs []', objs)
                 count += 1
             # [{'school':pk_of_choull', 'name': 'grade1', 'description': 'des1'}, {'name': 'grade2', 'description': 'des2'}]
             print('xxx--------------objs=',objs)
-            11/0
+
             serializer = GradeSerializer(data=objs, many=True)
             if serializer.is_valid():
                 serializer.save()
@@ -301,7 +321,7 @@ class APIGrade(APIView):
                 name=data['detail']['name'], 
                 description=data['detail']['description'], 
                 school__user=request.user)
-            delete_schools = grades.delete()
+            grades.delete()
             if not grades.exists():
                 return Response('delete success', status=200)
             else:
@@ -329,7 +349,7 @@ class APIStudent(APIView):
             first_name = detail['first_name']
             last_name = detail['last_name']
             nick_name = detail['nick_name']
-            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name)
+            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name, grade__school__user=request.user)
             if  objs.exists():
                 return Response('duplicated student', status=400)
 
