@@ -18,6 +18,9 @@ class APIUser(APIView):
     
     def post(self, request): 
         data = request.data
+        for k in ['act','detail']:
+            if k not in data.keys():
+                return Response('failed, %s is required'%k, status=400)
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
@@ -67,7 +70,7 @@ class APIUser(APIView):
 class APISchool(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self,request):
-        data = request.GET.dict()
+        # data = request.GET.dict()
         this_user = request.user
         # print('---------------------', this_user.pk)
 
@@ -95,7 +98,9 @@ class APISchool(APIView):
         data = request.data
         act = data.get('act')
         detail = data.get('detail')
-
+        for k in ['act','detail']:
+            if k not in data.keys():
+                return Response('failed, %s is required'%k, status=400)
         if act == 'create':
             detail.update({
                 'user':request.user.pk
@@ -163,8 +168,9 @@ class APISchool(APIView):
                 return Response('delete success', status=200)
             else:
                 return Response('unable to delete', status=400)
-
-        return Response('failed, action is required', status=400)     
+        
+        # we can check 'act' like the way belowm, but it is not quite effective as the one above
+        # return Response('failed, action is required', status=400)     
 
 # class APIAllStudent(APIView):
 #     model = Student
@@ -215,7 +221,7 @@ class APIGrade(APIView):
         data = request.data
         for k in ['act', 'detail']:
             if k not in data.keys():
-                return Response('no %s'%k, status=400)
+                return Response('failed, %s is required'%k, status=400)
         act = data.get('act')
         # print('-----------------ko',act)
         # 15/0
@@ -246,7 +252,7 @@ class APIGrade(APIView):
                 return Response('user has no school', status=400)
 
             names = detail['names']
-            # print('---------------------------ss', names)
+            print('---------------------------ss', names)
             # 11/0
             # query_names = Grade.objects.filter(name=names)
             # if query_names.exists():
@@ -294,27 +300,32 @@ class APIGrade(APIView):
                 return Response(serializer.errors, status=400)
 
 
-
         if act == 'update':
-            grades = Grade.objects.filter(name=data['old name'], school__user=request.user)
-            # print('--------------------------------ssss',Grade.objects.filter(pk=data['pk'], school__user=request.user))
-            name = detail['name']
-            # print('-------------------------------ddddd', detail['name'])
-            objs = Grade.objects.filter(name=name)
-            if objs.exists():
-                return Response('duplicated update', status=400)
-            
-            if not grades.exists():
-                return Response('unable to update', status=400)
-            
-            grades.update(**request.data['detail'])
+            old_names = data['old names']
+            for name in old_names:
+                grades = Grade.objects.filter(name=name, school__user=request.user)
+                print('--------------------------ss', name)
+                grades.update(**request.data['detail'])
             return Response('update success', status=200)
-            # print('---',data)
-            # print('----data[pk]', data['pk'])
-            # grades = Grade.objects.filter(pk=data['pk'])
-            # print('-----students', grades, type(grades))
-            # grades.update(**data['detail'])
-            # return ...
+            # grades = Grade.objects.filter(name=data['old names'], school__user=request.user)
+            # # print('--------------------------------ssss',Grade.objects.filter(pk=data['pk'], school__user=request.user))
+            # name = detail['names']
+            # # print('-------------------------------ddddd', detail['name'])
+            # objs = Grade.objects.filter(name=name)
+            # if objs.exists():
+            #     return Response('duplicated update', status=400)
+            
+            # if not grades.exists():
+            #     return Response('unable to update', status=400)
+            
+            # grades.update(**request.data['detail'])
+            # return Response('update success', status=200)
+            # # print('---',data)
+            # # print('----data[pk]', data['pk'])
+            # # grades = Grade.objects.filter(pk=data['pk'])
+            # # print('-----students', grades, type(grades))
+            # # grades.update(**data['detail'])
+            # # return ...
         
         if act == 'delete':
             grades = Grade.objects.filter(
@@ -327,11 +338,11 @@ class APIGrade(APIView):
             else:
                 return Response('unable to delete', status=400)
         
-        return Response('failed, action is required', status=400)
+        # return Response('failed, action is required', status=400)
             
 class APIStudent(APIView):
     def get (self, request):
-        data = request.GET.dict()
+        # data = request.GET.dict()
         objs = Student.objects.filter(grade__school__user=request.user)
         obj = objs.first()
         serializer = StudentSerializer(obj, many=False)
@@ -339,6 +350,9 @@ class APIStudent(APIView):
     
     def post (self, request):
         data = request.data
+        for k in ['act','detail']:
+            if k not in data.keys():
+                return Response('failed, %s is required'%k, status=400)
         act = data.get('act')
         detail = data.get('detail')
         # print('-----------------result', data)
@@ -394,7 +408,7 @@ class APIStudent(APIView):
             else:
                 return Response('unable to delete', status=400)
         
-        return Response('failed, action is required', status=400)
+        # return Response('failed, action is required', status=400)
 
 
 class APIParent(APIView):

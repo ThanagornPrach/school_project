@@ -123,9 +123,9 @@ POST /api/v1/grade/
 ```json
 {
     "act": "update",
-    "old name": "1",
+    "old names": ["grade 1", "grade 2", "grade 3"],
     "detail": {
-        "name": "2",
+        "names": ["grade a1", "grade a2", "grade a3"],
         "description": "this is description"
     }
 }

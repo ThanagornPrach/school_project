@@ -109,6 +109,18 @@ class UserTest(TestCase):
             password=data['detail']['password'])
         self.assertEqual(len(users), 0)
     
+    @tag('missing_act_user')
+    def test_missing_act_user(self):
+        data = {
+            'detail': {
+                'username': 'user 1',
+                'password': '123'
+            }
+        }
+
+        response = self.client.post('/api/v1/user/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, act is required')
 
 
 @tag('school')
@@ -149,18 +161,6 @@ class BasicTest(TestCase):
         # print('---------------------', schools.first().user)
         # user__username='test'
         self.assertEqual(len(schools), 1)
-
-    @tag('missing_act_school')
-    def test_missing_act(self):
-        data = {
-            'detail': {
-                'name': 'A',
-                'description': 'description A'
-            }
-        }
-        response = self.client.post('/api/v1/school/', data, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
 
     @tag('get_school')
     def test_get_school(self):
@@ -247,7 +247,7 @@ class BasicTest(TestCase):
             'detail': detail
         }
 
-        delete_school = obj.delete()
+        obj.delete()
 
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 200)
@@ -257,6 +257,19 @@ class BasicTest(TestCase):
             name=data['detail']['name'], 
             description=data['detail']['description'])
         self.assertEqual(len(schools), 0)
+
+    @tag('missing_act_school')
+    def test_missing_act_school(self):
+        data = {
+            'detail': {
+                'name': 'school A',
+                'description': '123'
+            }
+        }
+
+        response = self.client.post('/api/v1/school/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'failed, act is required')
 
 @tag('grade')
 class GradeTest(TestCase):
@@ -338,7 +351,7 @@ class GradeTest(TestCase):
         }
         response = self.client.post('/api/v1/grade/', data, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+        self.assertEqual(response.data, 'failed, act is required')
 
     @tag('get_grade')
     def test_get_grade(self):
@@ -349,18 +362,24 @@ class GradeTest(TestCase):
     
     @tag('duplicate_create_grade')
     def test_create_duplicate_grade(self):
-        obj = Grade.objects.create(
-            name=['1','2','3'], 
-            description='description 1', 
-            school=self.school
-        )
+        # obj = Grade.objects.create(
+        #     name=['1','2','3'], 
+        #     description='description 1', 
+        #     school=self.school
+        # )
+        names = []
+        for grade_name in ['1','2','3']:
+            grade = Grade.objects.create(
+                school=self.school,
+                name=grade_name)
+            names.append(grade)
 
-        print('-==========================dd', type(obj))
+        # print('-==========================dd', names)
         detail = {
             'names': ['1','2','3'],
             'description': 'description 1'
         }
-        print('=======================66')
+        # print('=======================66',detail['names'])
         data = {
             'act':'create',
             'detail':detail
@@ -370,31 +389,40 @@ class GradeTest(TestCase):
     
     @tag('update_grade')
     def test_update_grade(self):
-        obj = Grade.objects.create(
-            name='1', 
-            description="description 1", 
-            school=self.school)
+        # obj = Grade.objects.create(
+        #     name='1', 
+        #     description="description 1", 
+        #     school=self.school)
 
+        names = []
+        for grade_name in ['1','2','3']:
+            grade = Grade.objects.create(
+                school=self.school,
+                name=grade_name)
+            names.append(grade.pk)
+        print('----------------------io',names)
         detail = {
-            'name': '2',
+            'name': ['a','b','c'],
             'description': 'description 2'
         }
         data = {
             'act': 'update',
-            'old name': str(obj.name),
+            'old names': str(names),
             # 'pk': str(obj.pk),
             'detail': detail
         }
+        print('-------------------------qq', detail['name'])
         response = self.client.post('/api/v1/grade/', data, format='json')
+        print('---------------------------dd',response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
 
         #check updated grade
-        updated_objs = Grade.objects.filter(pk=obj.pk, name='2', description='description 2')
-        self.assertEqual(len(updated_objs), 1)
+        updated_objs = Grade.objects.filter(name=detail['name'], description='description 2')
+        self.assertEqual(len(updated_objs), 3)
 
         #check old grade
-        objs = Grade.objects.filter(pk=obj.pk, name='1', description='description 1')
+        objs = Grade.objects.filter(name=names, description='description 1')
         self.assertEqual(len(objs), 0)
     
     @tag('duplicate_update_grade')
@@ -581,7 +609,7 @@ class StudentTest(TestCase):
             'detail': detail
         }
 
-        delete_student = obj.delete()
+        obj.delete()
 
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 200)
@@ -605,7 +633,7 @@ class StudentTest(TestCase):
         }
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+        self.assertEqual(response.data, 'failed, act is required')
 
 
 @tag('parent')
@@ -810,7 +838,7 @@ class ParentTest(TestCase):
                 first_name = name,
             )
             children.append(child)
-
+        print('-------------------vv', children)
         _ = Parent.objects.all()
         self.assertTrue(len(_) >= 1)
         _ = Student.objects.all()
