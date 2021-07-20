@@ -389,40 +389,34 @@ class GradeTest(TestCase):
     
     @tag('update_grade')
     def test_update_grade(self):
-        # obj = Grade.objects.create(
-        #     name='1', 
-        #     description="description 1", 
-        #     school=self.school)
-
         names = []
-        for grade_name in ['1','2','3']:
+        for grade_name in ['c1','c2','c3']:
             grade = Grade.objects.create(
                 school=self.school,
                 name=grade_name)
             names.append(grade.pk)
-        print('----------------------io',names)
+        print('----------------------io', names)
         detail = {
             'name': ['a','b','c'],
             'description': 'description 2'
         }
         data = {
             'act': 'update',
-            'old names': str(names),
-            # 'pk': str(obj.pk),
+            'pk_names': names,
             'detail': detail
         }
-        print('-------------------------qq', detail['name'])
+        print('-------------------------qq', data['pk_names'])
         response = self.client.post('/api/v1/grade/', data, format='json')
         print('---------------------------dd',response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
 
         #check updated grade
-        updated_objs = Grade.objects.filter(name=detail['name'], description='description 2')
+        updated_objs = Grade.objects.filter(name=detail['name'])
         self.assertEqual(len(updated_objs), 3)
 
         #check old grade
-        objs = Grade.objects.filter(name=names, description='description 1')
+        objs = Grade.objects.filter(name=names)
         self.assertEqual(len(objs), 0)
     
     @tag('duplicate_update_grade')
@@ -873,6 +867,7 @@ class ParentTest(TestCase):
             'parent_pk' : str(parent.pk),
             'children_pk': children_pk,
         }
+        print('===========================sdsd', data['children_pk'])
         response = self.client.post('/api/v1/parent/', data, format='json')
         self.assertTrue(response.status_code == 200)
 

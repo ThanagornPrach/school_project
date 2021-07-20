@@ -120,14 +120,37 @@ POST /api/v1/grade/
 
 # update grade
 POST /api/v1/grade/
+<!-- ```json
+{
+    "act": "update",
+    "pks": ["1", "2", "3"],
+    "detail": {
+        "names": ["grade a1", "grade a2", "grade a3"],
+        "description": ["this is description", ""]
+    }
+}
+``` -->
+
 ```json
 {
     "act": "update",
-    "old names": ["grade 1", "grade 2", "grade 3"],
-    "detail": {
-        "names": ["grade a1", "grade a2", "grade a3"],
-        "description": "this is description"
-    }
+    "detail":[
+        {
+            "pk": "1",
+            "name": "grade a1 (new name)",
+            "description": "this is description for grade a1"
+        },
+        {
+            "pk": "2",
+            "name": "grade a2 (new name)",
+            "description": "this is description for grade a2"
+        },
+        {
+            "pk": "3",
+            "name": "grade a3 (new name)",
+            "description": "this is description for grade a3"
+        }
+    ]
 }
 ```
 

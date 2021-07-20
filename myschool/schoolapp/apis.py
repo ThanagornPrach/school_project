@@ -226,7 +226,7 @@ class APIGrade(APIView):
         # print('-----------------ko',act)
         # 15/0
         detail = data.get('detail')
-        print('---------------------------eee',detail)
+        # print('---------------------------eee',detail)
         if act == 'create':
             """
             # create grade
@@ -301,11 +301,42 @@ class APIGrade(APIView):
 
 
         if act == 'update':
-            old_names = data['old names']
-            for name in old_names:
-                grades = Grade.objects.filter(name=name, school__user=request.user)
-                print('--------------------------ss', name)
-                grades.update(**request.data['detail'])
+
+
+            # old_names = data['pk_names']
+            # print('-----------------------jj', old_names)
+            # new_names = detail['names']
+            # for pk_name in old_names:
+            #     print('=======================', pk_name)
+            #     grades = Grade.objects.filter(pk=pk_name, school__user=request.user)
+            #     print('========================gg',grades)
+            #     if not grades.exists():
+            #         return Response('pk does not exist', status=400)
+            #     detail = request.data['detail']
+            #     detail['name'] = 
+            #     grades.update(**request.data['detail'])
+            #     print('----------------------------ii', request.data['detail'])
+            #     1/0
+            #     print(grades)
+            for dat in detail:
+                pk = dat['pk']
+                grades = Grade.objects.filter(school__user=request.user, pk=pk)
+                if not grades.exists():
+                    return Response('pk does not exist', status=400)
+                
+                if len(grades) == 1:
+                    # traditional approach
+                    # grades.update({
+                    #     "name": dat['name'],
+                    #     "descriptions": dat['descriptions']
+                    # })
+
+                    # smart approach
+                    del dat['pk']
+
+                    # let's update 
+                    grades.update(dat) # what is the type of "dat" => "dict"
+
             return Response('update success', status=200)
             # grades = Grade.objects.filter(name=data['old names'], school__user=request.user)
             # # print('--------------------------------ssss',Grade.objects.filter(pk=data['pk'], school__user=request.user))
