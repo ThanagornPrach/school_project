@@ -395,43 +395,78 @@ class GradeTest(TestCase):
                 school=self.school,
                 name=grade_name)
             names.append(grade.pk)
-        print('----------------------io', names)
-        detail = {
-            'name': ['a','b','c'],
-            'description': 'description 2'
-        }
+            print('----------------------io', names)
+        detail = [
+            {
+                'pk': '1',
+                'name': 'a',
+                'description': 'd for a'
+            },
+            {
+                'pk': '2',
+                'name': 'b',
+                'description': 'd for b'
+            },
+            {
+                'pk': '3',
+                'name': 'c',
+                'description': 'd for c'
+            }
+        ]
         data = {
             'act': 'update',
-            'pk_names': names,
             'detail': detail
         }
-        print('-------------------------qq', data['pk_names'])
+        # print('-------------------------qq', detail[0]['name'], detail[1]['name'], detail[2]['name'])
         response = self.client.post('/api/v1/grade/', data, format='json')
         print('---------------------------dd',response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
 
         #check updated grade
-        updated_objs = Grade.objects.filter(name=detail['name'])
-        self.assertEqual(len(updated_objs), 3)
+        name_list = [detail[0]['name'], detail[1]['name'], detail[2]['name']]
+        # print('--------------------ii',len(name_list))
+        new_query_name = []
+        for name in name_list:
+            # print('-----------------------------qwe', name)
+            updated_objs = Grade.objects.filter(name=name, school=self.school)
+            print('-----------------------uuu', updated_objs)
+            new_query_name.append(updated_objs)
+            # print('--------------------', len(new_query_name))
+        self.assertEqual(len(new_query_name), 3)
 
         #check old grade
-        objs = Grade.objects.filter(name=names)
+        objs = Grade.objects.filter(name=grade_name, school=self.school)
         self.assertEqual(len(objs), 0)
     
     @tag('duplicate_update_grade')
     def test_duplicate_update_grade(self):
-        obj = Grade.objects.create(
-            name='1', description='description 1', school=self.school
-        )
-
-        detail = {
-            'name': '1',
-            'description': 'description 1'
-        }
+        names = []
+        for grade_name in ['a','b','c']:
+            grade = Grade.objects.create(
+                school=self.school,
+                name=grade_name)
+            names.append(grade.pk)
+            print('----------------------io', names)
+        detail = [
+            {
+                'pk': '1',
+                'name': 'a',
+                'description': 'd for a'
+            },
+            {
+                'pk': '2',
+                'name': 'b',
+                'description': 'd for b'
+            },
+            {
+                'pk': '3',
+                'name': 'c',
+                'description': 'd for c'
+            }
+        ]
         data = {
             'act': 'update',
-            'old name': str(obj.name),
             'detail': detail
         }
         response = self.client.post('/api/v1/grade/', data, format='json')

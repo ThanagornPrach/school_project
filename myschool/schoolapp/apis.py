@@ -318,12 +318,30 @@ class APIGrade(APIView):
             #     print('----------------------------ii', request.data['detail'])
             #     1/0
             #     print(grades)
+            
+            # check duplicate update
+            # new_name = detail
+            # print('============================sss', new_name)
+            
+            new_names = []
+            for dat in detail:
+                name = dat['name']
+                new_names.append(name)
+                print('-------------------------ert', new_names)
+            db_objs = Grade.objects.filter(name__in=new_names, school__user=request.user)
+            #use this technique to work with list
+            print('----------------------------sdsdsd', db_objs)
+            if db_objs.exists():
+                return Response('duplicated name', status=400)
+            
+
             for dat in detail:
                 pk = dat['pk']
+                print('============================as', pk)
                 grades = Grade.objects.filter(school__user=request.user, pk=pk)
                 if not grades.exists():
                     return Response('pk does not exist', status=400)
-                
+
                 if len(grades) == 1:
                     # traditional approach
                     # grades.update({
@@ -335,7 +353,7 @@ class APIGrade(APIView):
                     del dat['pk']
 
                     # let's update 
-                    grades.update(dat) # what is the type of "dat" => "dict"
+                    grades.update(**dat)
 
             return Response('update success', status=200)
             # grades = Grade.objects.filter(name=data['old names'], school__user=request.user)
