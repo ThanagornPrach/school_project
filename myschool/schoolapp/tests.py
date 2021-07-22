@@ -355,8 +355,12 @@ class GradeTest(TestCase):
 
     @tag('get_grade')
     def test_get_grade(self):
+        obj = []
+        for name in ['a','b','c']:
+            query_names = Grade.objects.create(name=name, school=self.school)
+            obj.append(query_names)
         response = self.client.get('/api/v1/grade/')
-        # print('----------------------111', response.data)
+        print('----------------------111', response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 3)
     
@@ -519,12 +523,15 @@ class StudentTest(TestCase):
         data = {
             'act': 'create',
             'detail': {
+                'grade': str(self.grade.pk),
                 'first_name': 'N1',
                 'last_name': 'N2',
                 'nick_name': 'N3'
             }
         }
+        print('-----------------------ie', data)
         response = self.client.post('/api/v1/student/', data, format='json')
+        print('----------------------------rr', response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'create success')
 

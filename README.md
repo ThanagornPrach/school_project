@@ -176,6 +176,7 @@ POST /api/v1/student/
 {
     "act": "create",
     "detail": {
+        "grade" : "1",
         "first_name": "tom",
         "last_name": "tomus",
         "nick_name": "tom-tom"

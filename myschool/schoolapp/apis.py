@@ -191,12 +191,9 @@ class APISchool(APIView):
 
 class APIGrade(APIView):
     def get(self, request):
-        data = request.GET.dict()
+        # data = request.GET.dict()
         objs = Grade.objects.filter(school__user=request.user)
-        # print('-------------------------', objs)
-        obj = objs.first()
-
-        # print('------------------------result', objs)
+        # obj = objs.first()
 
         # # ver1
         # for obj in objs:
@@ -211,7 +208,7 @@ class APIGrade(APIView):
 
         # for obj in objs:
         #     obj.school_name = school_obj.name
-        serializer = GradeSerializer(obj, many=False)
+        serializer = GradeSerializer(objs, many=True)
         # data_out = serializer.data
         # print('xxx--',data_out, type(data_out))
         # 1/0
@@ -406,9 +403,15 @@ class APIStudent(APIView):
         detail = data.get('detail')
         # print('-----------------result', data)
         if act == 'create':
-            detail.update({
-                'grade': Grade.objects.get(school__user=request.user).pk
-            })
+            grade_pk = detail['grade']
+            # print('---------------------------gg', grade)
+
+            #add student to grade
+            grades = Grade.objects.filter(pk=grade_pk, school__user=request.user)
+            if not grades.exists():
+                return Response('no pk', status=400)
+            
+            #check duplicated name
             first_name = detail['first_name']
             last_name = detail['last_name']
             nick_name = detail['nick_name']
@@ -416,12 +419,13 @@ class APIStudent(APIView):
             if  objs.exists():
                 return Response('duplicated student', status=400)
 
-            serialzer = StudentSerializer(data=detail, many=False)
-            if serialzer.is_valid():
-                serialzer.save()
+            serializer = StudentSerializer(data=detail, many=False)
+            # print('---------------------------fgf', serializer)
+            if serializer.is_valid():
+                serializer.save()
                 return Response('create success', status=200)
             else:
-                return Response(serialzer.errors, status=400)
+                return Response(serializer.errors, status=400)
     
         if act == 'update':
             students = Student.objects.filter(
