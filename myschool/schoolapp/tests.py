@@ -560,6 +560,7 @@ class StudentTest(TestCase):
         data = {
             'act': 'create',
             'detail': {
+                'grade': str(self.grade.pk),
                 'first_name':'F1',
                 'last_name': 'L1',
                 'nick_name': 'N1'
@@ -578,19 +579,19 @@ class StudentTest(TestCase):
         )
 
         detail = {
+            'student_pk': str(obj.pk),
             'first_name':'F2',
             'last_name': 'L2',
             'nick_name': 'N2'
         }
         data = {
             'act': 'update',
-            'old_first_name':str(obj.first_name),
-            'old_last_name': str(obj.last_name),
-            'old_nick_name': str(obj.nick_name),
             'detail': detail
         }
+        print('---------------------44', data)
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 200)
+        print('---------------------123', data)
         self.assertEqual(response.data, 'update success')
 
 
@@ -610,15 +611,13 @@ class StudentTest(TestCase):
         )
 
         detail = {
+            'student_pk': str(obj.pk),
             'first_name': 'F1',
             'last_name': 'L1',
             'nick_name': 'N1'
         }
         data = {
             'act': 'update',
-            'old_first_name':str(obj.first_name),
-            'old_last_name': str(obj.last_name),
-            'old_nick_name': str(obj.nick_name),
             'detail': detail
         }
         response = self.client.post('/api/v1/student/', data, format='json')
@@ -633,29 +632,21 @@ class StudentTest(TestCase):
             grade = self.grade)
 
         detail = {
-            'first_name': 'F1',
-            'last_name': 'L1',
-            'nick_name': 'N1'
+            'student_pk': str(obj.pk)
         }
         data = {
             'act': 'delete',
-            # 'delete_first_name':str(obj.first_name),
-            # 'delete_last_name': str(obj.last_name),
-            # 'delete_nick_name': str(obj.nick_name),
             'detail': detail
         }
-
-        obj.delete()
-
+        print('------------------------qqq', detail)
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'delete success')
 
         grades = Student.objects.filter(
-            first_name=data['detail']['first_name'], 
-            last_name=data['detail']['last_name'],
-            nick_name=data['detail']['nick_name'],
+            pk=data['detail']['student_pk'],
             grade=self.grade)
+        print(grades)
         self.assertEqual(len(grades), 0)
 
     @tag('missing_act_student')
@@ -762,13 +753,12 @@ class ParentTest(TestCase):
         )
         
         detail = {
+            'parent_pk': str(obj.pk),
             'first_name': 'P2',
             'last_name': 'L2'
         }
         data = {
             'act': 'update',
-            'old_first_name': str(obj.first_name),
-            'old_last_name': str(obj.last_name),
             'detail': detail
         }
         response = self.client.post('/api/v1/parent/', data, format='json')

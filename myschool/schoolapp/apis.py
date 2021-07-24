@@ -428,38 +428,44 @@ class APIStudent(APIView):
                 return Response(serializer.errors, status=400)
     
         if act == 'update':
+            student_pk = detail['student_pk']
+            print('-----------------------asd', student_pk)
             students = Student.objects.filter(
-                first_name=data['old_first_name'],
-                last_name=data['old_last_name'],
-                nick_name=data['old_nick_name'], 
+                pk=student_pk,
                 grade__school__user=request.user)
-            print('----------------------',students)
+            print('-------------------------pk', students)
+            if not students.exists():
+                return Response('no pk', status=400)
+            
             #check duplicate
             first_name = detail['first_name']
             last_name = detail['last_name']
             nick_name = detail['nick_name']
-            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name)
+            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name, grade__school__user=request.user)
+            print('----------------------kgkgk')
             if  objs.exists():
                 return Response('duplicated student', status=400)
 
-            if not students.exists():
-                return Response('unable to update', status=400)
-    
-            students.update(**request.data['detail'])
+            del detail['student_pk']
+            
+            # update student
+            students.update(**detail)
             return Response('update success', status=200)
         
         if act == 'delete':
+            student_pk = detail['student_pk']
+            print('---------------------------ff', student_pk)
             students = Student.objects.filter(
-                first_name=data['detail']['first_name'], 
-                last_name=data['detail']['last_name'], 
-                nick_name=data['detail']['nick_name'],
+                pk=student_pk,
                 grade__school__user=request.user)
-            students.delete()
+            print('-0------------------------------dfff', students)
             if not students.exists():
-                return Response('delete success', status=200)
+                return Response('no student to delete', status=400)
+            print('--------------------------sss', students)
             # delete_schools = School.objects.filter(user=request.user).delete()
-            else:
-                return Response('unable to delete', status=400)
+            students.delete()
+            print('---------------cc', students)
+            return Response('delete success', status=200)
         
         # return Response('failed, action is required', status=400)
 
@@ -481,6 +487,7 @@ class APIParent(APIView):
             detail.update({
                 'director':request.user.pk
             })
+            
             first_name = detail['first_name']
             last_name = detail['last_name']
             objs = Parent.objects.filter(first_name=first_name, last_name=last_name)
@@ -577,11 +584,16 @@ class APIParent(APIView):
             return Response('added %d child to parent'%count, status=200)
         
         if act == 'update':
+            parent_pk = detail['parent_pk']
+            print('------------------------111', parent_pk)
             this_user = request.user
-            parents = Parent.objects.filter(director=this_user)
+            parents = Parent.objects.filter(pk=parent_pk, director=this_user)
+            print('--------------------------dddd', parents)
+
+            #check duplicated update
             first_name = detail['first_name']
             last_name = detail['last_name']
-            objs = Parent.objects.filter(first_name=first_name, last_name=last_name)
+            objs = Parent.objects.filter(first_name=first_name, last_name=last_name, director=this_user)
             if objs.exists():
                 return Response('duplicated parent', status=400)
 
@@ -589,7 +601,8 @@ class APIParent(APIView):
             if not parents.exists():
                 return Response('unable to update', status=400)
             
-            parents.update(**request.data['detail'])
+            del detail['parent_pk']
+            parents.update(**detail)
             return Response('update success', status=200)
         
         if act == 'delete':
@@ -605,6 +618,7 @@ class APIParent(APIView):
                 return Response('no parent', status=400)
             
             parents.delete()
+            # print('--------------------de',parents)
             return Response('delete success', status=200)
             
         return Response('failed, action is required', status=400)

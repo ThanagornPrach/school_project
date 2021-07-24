@@ -186,13 +186,24 @@ POST /api/v1/student/
 
 # update student
 POST /api/v1/student/
-```json
+<!-- ```json
 {
     "act": "update",
     "old_first_name": "tom",
     "old_last_name": "tomus",
     "old_nick_name": "tom-tom",
     "detail": {
+        "first_name": "bom",
+        "last_name": "bomus",
+        "nick_name": "bom-bom"
+    }
+}
+```  -->
+```json
+{
+    "act": "update",
+    "detail": {
+        "student_pk": "1",
         "first_name": "bom",
         "last_name": "bomus",
         "nick_name": "bom-bom"
@@ -206,9 +217,7 @@ POST /api/v1/student/
 {
     "act": "delete",
     "detail": {
-        "first_name": "tom",
-        "last_name": "tomus",
-        "nick_name": "tom-tom"
+        "student_pk": "1"
     }
 }
 ```
@@ -243,11 +252,8 @@ POST /api/v1/parent/
 ```json
 {
     "act": "update",
-    "old_first_name": "bom",
-    "old_last_name": "bom-bom",
     "detail": {
-        "first_name": "update-first_name",
-        "last_name": "update-last_name"
+        "parent_pk": "1"
     }
 }
 ```
