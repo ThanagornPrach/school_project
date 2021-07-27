@@ -61,8 +61,8 @@ POST /api/v1/school/
 ```json
 {
     "act": "update",
-    "old name": "school a",
     "detail": {
+        "school_pk": "1",
         "name": "school b",
         "description": "this is description"
     }
@@ -79,8 +79,7 @@ POST /api/v1/school/
 {
     "act": "delete",
     "detail": {
-        "name": "school a",
-        "description": "this is description"
+        "school_pk": "1"
     }
 }
 ```
@@ -90,12 +89,21 @@ POST /api/v1/grade/
 ```json
 {
     "act": "create",
-    "detail": {
-        "name": ["grade 1", "grade 2", "grade 3"],
-        "description": "this is description"
-    }
+    "detail":[
+        {
+            "name": "grade 1",
+            "description": "this is description for grade 1"
+        },
+        {
+            "name": "grade 2",
+            "description": "this is description for grade 2"
+        },
+        {
+            "name": "grade 3",
+            "description": "this is description for grade 3"
+        }
+    ]
 }
-
 ```
 
 <!-- modified

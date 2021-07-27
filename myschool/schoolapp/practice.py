@@ -178,3 +178,23 @@
 
 # test_key('o', 'dog', 'bird', 'cat')
 
+arr = [0,0,0,1,1,1]
+# arr = [0,0,0,0,0,0]
+n = len(arr)
+
+def transitionPoint(arr, n):
+    #Code here
+    for i in range(n):
+        print('--',i)
+        #find the transition point with len
+        #return the len that make the transition
+        if (arr[i] >= 1):
+            return i 
+    
+    return -1
+
+point = transitionPoint(arr,n)
+if point >= 0:
+    print(point)
+else:
+    print('no transition point')

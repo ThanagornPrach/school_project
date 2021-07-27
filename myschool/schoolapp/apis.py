@@ -23,13 +23,22 @@ class APIUser(APIView):
                 return Response('failed, %s is required'%k, status=400)
         act = data.get('act')
         detail = data.get('detail')
+        
         if act == 'create':
-            username = detail['username']
+            #make sure that the format 'username'/'password' is correct
+            try:
+                username = detail['username']
+                password = detail['password']
+            except:
+                return Response('incorrect format', status=400)
+
             objs = User.objects.filter(username=username)
             if objs.exists():
                 return Response('duplicated username', status=400)
 
-            new_user = User.objects.create_user(username=detail['username'], password=detail['password'])
+            new_user = User.objects.create_user(username=username, password=password)
+            # print('-------------------ss',)
+            # 1/0
             new_user.save()
             # serialzer = UserSerializer(data=detail, many=False)
             # if serialzer.is_valid():
@@ -45,8 +54,14 @@ class APIUser(APIView):
         if act == 'update':
             this_user = request.user
             users = User.objects.filter(username=this_user)
-           
-            username = detail['username']
+
+            try:
+                username = detail['username']
+                password = detail['password']
+                old_name = data['old username']
+            except:
+                return Response('incorrect format', status=400)
+            
             objs = User.objects.filter(username=username)
             if objs.exists():
                 return Response('duplicated update', status=400)
@@ -59,12 +74,23 @@ class APIUser(APIView):
         
         if act == 'delete':
             this_user = request.user
+
+            try:
+                username = detail['username']
+                password = detail['password']
+            except:
+                return Response('incorrect format', status=400)
+
             users = User.objects.filter(username=this_user)
+            if not users.exists():
+                return Response('no user', status=400)
+
             users.delete()
             return Response('delete success', status=200)
+        
+    #check whether user insert correct input for 'act'
         else:
-            return Response('unable to delete', status=400)
-
+            return Response('act is incorrect', status=400)
 
 
 class APISchool(APIView):
@@ -105,7 +131,13 @@ class APISchool(APIView):
             detail.update({
                 'user':request.user.pk
             })
-            name = detail['name']
+            
+            try:
+                name = detail['name']
+                description = detail['description']
+            except:
+                return Response('incorrect format', status=400)
+            
             objs = School.objects.filter(name=name, user=request.user)
             if objs.exists():
                 return Response ('duplicated school', status=400)
@@ -121,9 +153,20 @@ class APISchool(APIView):
         if act == 'update':
             # get school of this user
             this_user = request.user
-            schools = School.objects.filter(user=this_user)
+            try:
+                school_pk = detail['school_pk']
+            except:
+                return Response('incorrect format', status=400)
+            schools = School.objects.filter(pk=school_pk, user=this_user)
             # print('--------------------------ans',School.objects.filter(user=this_user))
-            name = detail['name']
+            
+            try:
+                name = detail['name']
+                description = detail['description']
+            except:
+                return Response('incorrect format', status=400)
+
+            
             objs = School.objects.filter(name=name)
             if objs.exists():
                 return Response('duplicated school', 400)
@@ -138,9 +181,9 @@ class APISchool(APIView):
             # obj = schools[0]
             # obj.school = new_code
             # obj.save()
-
+            del detail['school_pk']
             # # approach 2 - multi update #update all schools(object) that the user requested
-            schools.update(**request.data['detail'])
+            schools.update(**detail)
 
             # schools = <QuerySet>[obj1, obj2, obj3]
             # obj1.code = 'oldcode'
@@ -161,13 +204,23 @@ class APISchool(APIView):
         
         if act == 'delete':
             this_user = request.user
-            schools = School.objects.filter(user=request.user)
+            try:
+                school_pk = detail['school_pk']
+            except:
+                return Response('incorrect format', status=400)
+
+            schools = School.objects.filter(pk=school_pk, user=request.user)
             print('----------------------------11', schools)
-            schools.delete()
             if not schools.exists():
-                return Response('delete success', status=200)
-            else:
                 return Response('unable to delete', status=400)
+
+            schools.delete()
+            print('----------------de', schools)
+            return Response('delete success', status=200)
+        
+        else:
+            return Response('act is incorrect', status=400)
+            
         
         # we can check 'act' like the way belowm, but it is not quite effective as the one above
         # return Response('failed, action is required', status=400)     
@@ -256,15 +309,15 @@ class APIGrade(APIView):
             #     return Response('duplicated name', status=400)
             
             for name in names:
-                print('---------------------------i', name)
+                # print('---------------------------i', name)
                 query_names = Grade.objects.filter(name=name, school__user=request.user)
-                print('----------------------er', names)
-                print('-------------------------o', query_names)
+                # print('----------------------er', names)
+                # print('-------------------------o', query_names)
                 if query_names.exists():
                     return Response('duplicated name', status=400)
 
             description = detail['description']
-            print('--------------------------123', description)
+            # print('--------------------------123', description)
             objs = []
             count = 0
             # [(k, v), (k, v), (k, v)]
@@ -441,7 +494,10 @@ class APIStudent(APIView):
             first_name = detail['first_name']
             last_name = detail['last_name']
             nick_name = detail['nick_name']
-            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name, grade__school__user=request.user)
+            objs = Student.objects.filter(
+                first_name=first_name, 
+                last_name=last_name, 
+                nick_name=nick_name, grade__school__user=request.user)
             print('----------------------kgkgk')
             if  objs.exists():
                 return Response('duplicated student', status=400)

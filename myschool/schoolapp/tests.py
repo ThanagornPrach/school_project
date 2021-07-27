@@ -175,15 +175,16 @@ class BasicTest(TestCase):
         obj = School.objects.create(name='A', description='description A', user=self.new_user)
         
         detail = {
+            'school_pk': str(obj.pk),
             'name':'G',
             'description': 'description G'
         }
 
         data = {
             'act':'update',
-            'old name':str(obj.name), 
             'detail':detail
             }
+        print('---------------------ss', data)
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
@@ -192,7 +193,7 @@ class BasicTest(TestCase):
         objs = School.objects.filter(user=self.new_user)
 
         # check new name of updated school
-        updated_objs = School.objects.filter(user=self.new_user, name='G')
+        updated_objs = School.objects.filter(user=self.new_user, name='G', pk=data['detail']['school_pk'])
         self.assertEqual(len(updated_objs), 1)
 
         # check old school
@@ -238,24 +239,18 @@ class BasicTest(TestCase):
         obj = School.objects.create(name='school A', description='123', user=self.new_user)
 
         detail = {
-            'name': 'school A',
-            'description': '123'
+            'school_pk': str(obj.pk),
         }
         data = {
             'act': 'delete',
-            # 'delete name': str(obj.name),
             'detail': detail
         }
-
-        obj.delete()
-
+        print('----------------d', data)
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'delete success')
 
-        schools = School.objects.filter(
-            name=data['detail']['name'], 
-            description=data['detail']['description'])
+        schools = School.objects.filter(pk=data['detail']['school_pk'])
         self.assertEqual(len(schools), 0)
 
     @tag('missing_act_school')
@@ -291,14 +286,31 @@ class GradeTest(TestCase):
     def test_create_grade(self):
         data = {
             'act': 'create',
-            'detail': {
-                'names': ['1','2','3'],
-                'description': 'description 1'
-            }
+            'detail': [
+                {
+                    "name": "grade 1",
+                    "description": "this is description for grade 1"
+                },
+                {
+                    "name": "grade 2",
+                    "description": "this is description for grade 2"
+                },
+                {
+                    "name": "grade 3",
+                    "description": "this is description for grade 3"
+                }
+            ]
         }
-        
+        print('--------------------ss', data['detail'])
+
         count = 0 
-        for names in data['detail']['names']:
+        for grade in data['detail']:
+            name = grade['name']
+            description = grade['description']
+            print('-----------g', grade)
+            print('-----------n', name)
+            print('------------d', description)
+            print('xxxxxxxxxxxxxxx')
             count += 1 
         
         print('-------------------------------ww', data)

@@ -3,7 +3,7 @@ from .models import *
 
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
-    list_display = ['user','name', 'description']
+    list_display = ['user','name', 'description', 'pk']
 
 @admin.register(Grade)
 class GradeAdmin(admin.ModelAdmin):
