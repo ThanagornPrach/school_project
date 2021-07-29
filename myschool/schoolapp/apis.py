@@ -276,23 +276,22 @@ class APIGrade(APIView):
         # print('-----------------ko',act)
         # 15/0
         detail = data.get('detail')
-        # print('---------------------------eee',detail)
         if act == 'create':
-            """
-            # create grade
-            POST /api/v1/grade/
-            ```json
-                "act": "create",
-                "detail": {
-                    "namessssss": [{"name":"1"}, {"name":"17"}, {"name": "10"}],
-                    "description": "this is description"
-                }
-            }
-            ```
-            """
             # print('----------------------dfd', detail['names'])
             # 12/0
+            
+            #add protection
+            try:
+                for dict in detail:
+                    key_name = dict['name']
+                    key_description = dict['description']
+            except:
+                return Response('incorrect format', status=400)
+
+            #get school
             schools = School.objects.filter(user=request.user)
+
+            
             # we can use schools.first or the method below
 
             # user has no school
@@ -301,34 +300,39 @@ class APIGrade(APIView):
             else:
                 return Response('user has no school', status=400)
 
-            names = detail['names']
-            print('---------------------------ss', names)
-            # 11/0
-            # query_names = Grade.objects.filter(name=names)
-            # if query_names.exists():
-            #     return Response('duplicated name', status=400)
-            
-            for name in names:
-                # print('---------------------------i', name)
-                query_names = Grade.objects.filter(name=name, school__user=request.user)
-                # print('----------------------er', names)
-                # print('-------------------------o', query_names)
-                if query_names.exists():
-                    return Response('duplicated name', status=400)
+            #set up 'grade_name'
+            for grade in detail: #grade = {'name': 'grade 1', 'description': 'this is description for grade 1'}
+                print('----------------------gr', grade) # grade = {'name': 'grade 1', 'description': 'this is description for grade 1'}
+                grade_name = grade['name'] #grade = {'name': 'grade 1', 'description': 'this is description for grade 1'} # grade_name = 'grade 1' 
+                print('---------------------------ss', grade_name) #grade = {'name': 'grade 1', 'description': 'this is description for grade 1'} #grade_name = 'grade 1'
+            #grade_name = 'grade 3'
+            #grade_name = 'grade 3'
+            #grade_name = 'grade 3'
 
-            description = detail['description']
+            #check duplicated name            
+            # for name in grade_name: #grade = {'name': 'grade 3', 'description': 'this is description for grade 1'} # name = 'grade 3'
+                print('---------------------------g',grade_name)
+                query_names = Grade.objects.filter(name=grade_name, school__user=request.user)
+                # print('----------------------er', names)
+                # print('------------------------o', query_names)
+                if query_names.exists():
+                    return Response('duplicated name', status=400) #the loop end here after it loop through all the items input by the user
+
+            description = grade['description']
             # print('--------------------------123', description)
+            
             objs = []
-            count = 0
-            # [(k, v), (k, v), (k, v)]
-            for name in detail['names']:
+            count = 0            
+            #make another loop with the same variables in order to make list of objects (with this, we don't have to worry about the value that is changed to 'grade 3' by the above loop)
+            for grade in detail:
+                grade_name = grade['name']
                 print('\n\n----------------------------',count)
-                print(count, '----name', name)
+                print(count, '----name', grade_name)
 
                 obj = {
                     'school': school.pk,
 
-                    'name': name,
+                    'name': grade_name,
                     'description': description,
                 }
                 # obj.update({
@@ -352,7 +356,13 @@ class APIGrade(APIView):
 
         if act == 'update':
 
-
+            try:
+                for dict in detail:
+                    key_pk = dict['pk']
+                    key_name = dict['name']
+                    key_description = dict['description']
+            except:
+                return Response('incorrect format', status=400)
             # old_names = data['pk_names']
             # print('-----------------------jj', old_names)
             # new_names = detail['names']
@@ -427,15 +437,21 @@ class APIGrade(APIView):
             # # return ...
         
         if act == 'delete':
+            pk = detail['pk']
             grades = Grade.objects.filter(
-                name=data['detail']['name'], 
-                description=data['detail']['description'], 
+                pk=pk, 
                 school__user=request.user)
-            grades.delete()
             if not grades.exists():
-                return Response('delete success', status=200)
-            else:
                 return Response('unable to delete', status=400)
+            
+            grades.delete()
+            return Response('delete success', status=200)
+        
+        else:
+            return Response('act is incorrect', status=400)
+            
+
+            
         
         # return Response('failed, action is required', status=400)
             
@@ -456,7 +472,10 @@ class APIStudent(APIView):
         detail = data.get('detail')
         # print('-----------------result', data)
         if act == 'create':
-            grade_pk = detail['grade']
+            try:
+                grade_pk = detail['grade']
+            except:
+                return Response('incorrect format', status=400)
             # print('---------------------------gg', grade)
 
             #add student to grade
@@ -464,10 +483,13 @@ class APIStudent(APIView):
             if not grades.exists():
                 return Response('no pk', status=400)
             
-            #check duplicated name
-            first_name = detail['first_name']
-            last_name = detail['last_name']
-            nick_name = detail['nick_name']
+            #check duplicated name and key
+            try:
+                first_name = detail['first_name']
+                last_name = detail['last_name']
+                nick_name = detail['nick_name']
+            except:
+                return Response('incorrect format', status=400)
             objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name, grade__school__user=request.user)
             if  objs.exists():
                 return Response('duplicated student', status=400)
@@ -481,7 +503,10 @@ class APIStudent(APIView):
                 return Response(serializer.errors, status=400)
     
         if act == 'update':
-            student_pk = detail['student_pk']
+            try:
+                student_pk = detail['student_pk']
+            except:
+                return Response('incorrect format', status=400)
             print('-----------------------asd', student_pk)
             students = Student.objects.filter(
                 pk=student_pk,
@@ -490,10 +515,13 @@ class APIStudent(APIView):
             if not students.exists():
                 return Response('no pk', status=400)
             
-            #check duplicate
-            first_name = detail['first_name']
-            last_name = detail['last_name']
-            nick_name = detail['nick_name']
+            #check duplicate and key
+            try:
+                first_name = detail['first_name']
+                last_name = detail['last_name']
+                nick_name = detail['nick_name']
+            except:
+                return Response('incorrect format', status=400)
             objs = Student.objects.filter(
                 first_name=first_name, 
                 last_name=last_name, 
@@ -523,12 +551,15 @@ class APIStudent(APIView):
             print('---------------cc', students)
             return Response('delete success', status=200)
         
+        else:
+            return Response('act is incorrect', status=400)
+        
         # return Response('failed, action is required', status=400)
 
 
 class APIParent(APIView):
     def get (self, request):
-        data = request.GET.dict()
+        # data = request.GET.dict()
         this_user = request.user
         objs = Parent.objects.filter(director=this_user)
         obj = objs.first()
@@ -537,6 +568,9 @@ class APIParent(APIView):
 
     def post(self, request):
         data = request.data
+        for k in ['act', 'detail']:
+            if k not in data.keys():
+                return Response('failed, %s is required'%k, status=400)
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
@@ -544,8 +578,11 @@ class APIParent(APIView):
                 'director':request.user.pk
             })
             
-            first_name = detail['first_name']
-            last_name = detail['last_name']
+            try:
+                first_name = detail['first_name']
+                last_name = detail['last_name']
+            except:
+                return Response('incorrect fomat', status=400)
             objs = Parent.objects.filter(first_name=first_name, last_name=last_name)
             if objs.exists():
                 return Response('duplicated parent', status=400)
@@ -596,14 +633,16 @@ class APIParent(APIView):
             this is the data format
             {
                 "act": "add children",
-                "parent_pk": "pk",
-                "children_pk": [{"pk": "1"}, {"pk": "17"}, {"pk": "10"}]
+                "detail": {
+                    "parent_pk": "pk",
+                    "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
+                }
             }
             '''
 
             try:
-                parent_pk = data['parent_pk']
-                children_pk = data['children_pk']
+                parent_pk = data['detail']['parent_pk']
+                children_pk = data['detail']['children_pk']
                 try:
                     parent_pk = int(parent_pk)
                 except:
@@ -640,15 +679,21 @@ class APIParent(APIView):
             return Response('added %d child to parent'%count, status=200)
         
         if act == 'update':
-            parent_pk = detail['parent_pk']
+            try:
+                parent_pk = detail['parent_pk']
+            except:
+                return Response('incorrect format', status=400)
             print('------------------------111', parent_pk)
             this_user = request.user
             parents = Parent.objects.filter(pk=parent_pk, director=this_user)
             print('--------------------------dddd', parents)
 
-            #check duplicated update
-            first_name = detail['first_name']
-            last_name = detail['last_name']
+            #check duplicated update and key
+            try:
+                first_name = detail['first_name']
+                last_name = detail['last_name']
+            except:
+                return Response('incorrect format', status=400)
             objs = Parent.objects.filter(first_name=first_name, last_name=last_name, director=this_user)
             if objs.exists():
                 return Response('duplicated parent', status=400)
@@ -664,9 +709,9 @@ class APIParent(APIView):
         if act == 'delete':
             this_user = request.user
             print('---------------------33', this_user)
+            parent_pk = detail['parent_pk']
             parents = Parent.objects.filter(
-                first_name=data['detail']['first_name'], 
-                last_name=data['detail']['last_name'], 
+                pk=parent_pk,
                 director=this_user)
             
             print('--------------------------------22', parents)

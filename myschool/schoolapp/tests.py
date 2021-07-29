@@ -301,16 +301,16 @@ class GradeTest(TestCase):
                 }
             ]
         }
-        print('--------------------ss', data['detail'])
+        # print('--------------------ss', data['detail'])
 
         count = 0 
         for grade in data['detail']:
             name = grade['name']
-            description = grade['description']
-            print('-----------g', grade)
-            print('-----------n', name)
-            print('------------d', description)
-            print('xxxxxxxxxxxxxxx')
+            # description = grade['description']
+            # print('-----------g', grade)
+            # print('-----------n', name)
+            # print('------------d', description)
+            # print('xxxxxxxxxxxxxxx')
             count += 1 
         
         print('-------------------------------ww', data)
@@ -378,11 +378,6 @@ class GradeTest(TestCase):
     
     @tag('duplicate_create_grade')
     def test_create_duplicate_grade(self):
-        # obj = Grade.objects.create(
-        #     name=['1','2','3'], 
-        #     description='description 1', 
-        #     school=self.school
-        # )
         names = []
         for grade_name in ['1','2','3']:
             grade = Grade.objects.create(
@@ -391,11 +386,21 @@ class GradeTest(TestCase):
             names.append(grade)
 
         # print('-==========================dd', names)
-        detail = {
-            'names': ['1','2','3'],
-            'description': 'description 1'
-        }
-        # print('=======================66',detail['names'])
+        detail = [
+                {
+                    "name": "1",
+                    "description": "this is description for grade 1"
+                },
+                {
+                    "name": "2",
+                    "description": "this is description for grade 2"
+                },
+                {
+                    "name": "3",
+                    "description": "this is description for grade 3"
+                }
+            ]
+        # print('=======================66',detail)
         data = {
             'act':'create',
             'detail':detail
@@ -493,24 +498,20 @@ class GradeTest(TestCase):
         obj = Grade.objects.create(name='A', description='123', school=self.school)
 
         detail = {
-            'name': 'A',
-            'description': '123'
+            'pk': str(obj.pk)
         }
         data = {
             'act': 'delete',
-            # 'delete name': str(obj.name),
             'detail': detail
         }
-
-        obj.delete()
 
         response = self.client.post('/api/v1/grade/', data, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'delete success')
 
         grades = Grade.objects.filter(
-            name=data['detail']['name'], 
-            description=data['detail']['description'])
+            pk=data['detail']['pk'],
+            school=self.school)
         self.assertEqual(len(grades), 0)
     
 
@@ -791,16 +792,17 @@ class ParentTest(TestCase):
             director=self.new_user
         )
 
-        p1 = obj.children.add(self.child)
+        obj.children.add(self.child)
 
         detail = {
+            'parent_pk': str(obj.pk), 
+            # need 'pk' since in [api] still not yet reach the process of updating the object 
+            # --> at this point we just check the duplicated parent
             'first_name': 'P1',
             'last_name': 'L1'
         }
         data = {
             'act': 'update',
-            'old_first_name': str(obj.first_name),
-            'old_last_name': str(obj.last_name),
             'detail': detail
         }
         response = self.client.post('/api/v1/parent/', data, format='json')
@@ -816,13 +818,10 @@ class ParentTest(TestCase):
         print('=======================45', obj)
 
         detail = {
-            'first_name': 'F1',
-            'last_name': 'L1',
+            'parent_pk': str(obj.pk)
         }
         data = {
             'act': 'delete',
-            # 'delete_first_name':str(obj.first_name),
-            # 'delete_last_name': str(obj.last_name),
             'detail': detail
         }
 
@@ -834,8 +833,8 @@ class ParentTest(TestCase):
         self.assertEqual(response.data, 'delete success')
 
         parents = Parent.objects.filter(
-            first_name=data['detail']['first_name'], 
-            last_name=data['detail']['last_name'])
+            pk=data['detail']['parent_pk'],
+            director=self.new_user)
         self.assertEqual(len(parents), 0)
 
     # @tag('add_children')
@@ -904,19 +903,24 @@ class ParentTest(TestCase):
                 'pk': str(child.pk)
             }
             children_pk.append(_)
+        
+        detail = {
+            'parent_pk' : str(parent.pk),
+            'children_pk': children_pk,
+        }
 
         # post data
         data = {
             'act': 'add children',
-            'parent_pk' : str(parent.pk),
-            'children_pk': children_pk,
+            'detail': detail
         }
-        print('===========================sdsd', data['children_pk'])
+        # print('===========================sdsd', data['children_pk'])
         response = self.client.post('/api/v1/parent/', data, format='json')
+        # print('=-============================rr', response.data)
         self.assertTrue(response.status_code == 200)
 
         # check children in parent
-        parent = Parent.objects.get(pk=data['parent_pk'])
+        parent = Parent.objects.get(pk=data['detail']['parent_pk'])
         children = parent.children.all()
         self.assertTrue(len(children) == 2)
         self.assertTrue(children[0].first_name == 'sam1')

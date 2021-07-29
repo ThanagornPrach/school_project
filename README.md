@@ -168,8 +168,7 @@ POST /api/v1/grade/
 {
     "act": "delete",
     "detail": {
-        "name": "2",
-        "description": "this is description"
+        "pk": "1"
     }
 }
 ```
@@ -250,8 +249,12 @@ Post /api/v1/parent/
 ```json
 {
     "act": "add children",
-    "parent_pk": "pk",
-    "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
+    "detail": {
+        "parent_pk": "pk",
+        "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
+    }
+    // "parent_pk": "pk",
+    // "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
 }
 ```
 
@@ -261,7 +264,9 @@ POST /api/v1/parent/
 {
     "act": "update",
     "detail": {
-        "parent_pk": "1"
+        "parent_pk": "1",
+        "first_name": "tom (this is new name [first_name])",
+        "last_name": "tom-tom (this is new [last_name])"
     }
 }
 ```
@@ -272,8 +277,7 @@ POST /api/v1/parent/
 {
     "act": "delete",
     "detail": {
-        "first_name": "tom",
-        "last_name": "tom-tom"
+        "parent_pk": "1"
     }
 }
 ```
