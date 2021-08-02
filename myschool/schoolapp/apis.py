@@ -1,3 +1,5 @@
+from os import name, path
+from unittest.case import skip
 from django.http import response
 from .serializers import *
 from rest_framework.views import APIView
@@ -58,11 +60,11 @@ class APIUser(APIView):
             try:
                 username = detail['username']
                 password = detail['password']
-                old_name = data['old username']
+                # old_name = data['old username']
             except:
                 return Response('incorrect format', status=400)
             
-            objs = User.objects.filter(username=username)
+            objs = User.objects.filter(username=username, user=this_user)
             if objs.exists():
                 return Response('duplicated update', status=400)
             
@@ -138,7 +140,7 @@ class APISchool(APIView):
             except:
                 return Response('incorrect format', status=400)
             
-            objs = School.objects.filter(name=name, user=request.user)
+            objs = School.objects.filter(name=name,description=description, user=request.user)
             if objs.exists():
                 return Response ('duplicated school', status=400)
 
@@ -151,39 +153,72 @@ class APISchool(APIView):
                 return Response(serializer.errors, status=400)
 
         if act == 'update':
-            # get school of this user
-            this_user = request.user
             try:
-                school_pk = detail['school_pk']
+                # check duplicated name
+                if 'name' in detail:
+                    name = detail['name']
+                    objs = School.objects.filter(user=request.user, name=name)
+                    if objs.exists():
+                        return Response('duplicated name! you cannot use this name', status=400)
+
+                objs = School.objects.filter(user=request.user)
+                objs.update(**detail)   
+                return Response('update success', status=200)
             except:
                 return Response('incorrect format', status=400)
-            schools = School.objects.filter(pk=school_pk, user=this_user)
-            # print('--------------------------ans',School.objects.filter(user=this_user))
+
+        # if act == 'update_xxx':
+        #     # get school of this user
+        #     this_user = request.user
+        #     try:
+        #         school_pk = detail['school_pk']
+        #     except:
+        #         return Response('incorrect format', status=400)
+        #     schools = School.objects.filter(pk=school_pk, user=this_user)
+        #     # print('--------------------------ans',School.objects.filter(user=this_user))
+
+        #     print('---------------------------', detail)
             
-            try:
-                name = detail['name']
-                description = detail['description']
-            except:
-                return Response('incorrect format', status=400)
 
-            
-            objs = School.objects.filter(name=name)
-            if objs.exists():
-                return Response('duplicated school', 400)
+        #     try:
+        #         name = detail['name']
+        #         description = detail['description']
+        #         # if 'description' not in detail.keys():
+        #         #     objs = School.objects.filter(name=name)
+        #         #     if objs.exists():
+        #         #         return Response('duplicated school', 400)
 
 
-            if not schools.exists():
-                return Response('fail', status=400)
+        #         #     if not schools.exists():
+        #         #         return Response('fail', status=400)
+                    
+        #         #     del detail['school_pk']
 
-            # # approach 1 - single update
-            # # get new school name from user
-            # new_code = request.data['detail']['school']
-            # obj = schools[0]
-            # obj.school = new_code
-            # obj.save()
-            del detail['school_pk']
-            # # approach 2 - multi update #update all schools(object) that the user requested
-            schools.update(**detail)
+        #         #     schools.update(**detail)
+        #         #     return Response('update success', status=200)
+                
+        #         # if description not in detail.keys():
+        #         #     del description
+        #     except:
+        #         return Response('incorrect format', status=400)
+
+        #     objs = School.objects.filter(name=name, user=this_user)
+        #     if objs.exists():
+        #         return Response('duplicated school', 400)
+
+
+        #     if not schools.exists():
+        #         return Response('fail', status=400)
+
+        #     # # approach 1 - single update
+        #     # # get new school name from user
+        #     # new_code = request.data['detail']['school']
+        #     # obj = schools[0]
+        #     # obj.school = new_code
+        #     # obj.save()
+        #     del detail['school_pk']
+        #     # # approach 2 - multi update #update all schools(object) that the user requested
+        #     schools.update(**detail)
 
             # schools = <QuerySet>[obj1, obj2, obj3]
             # obj1.code = 'oldcode'
@@ -199,8 +234,6 @@ class APISchool(APIView):
             #     'name': 'newname',
             #     'province': 'new',
             # }
-
-            return Response('update success', status=200)
         
         if act == 'delete':
             this_user = request.user
@@ -209,7 +242,7 @@ class APISchool(APIView):
             except:
                 return Response('incorrect format', status=400)
 
-            schools = School.objects.filter(pk=school_pk, user=request.user)
+            schools = School.objects.filter(pk=school_pk, user=this_user)
             print('----------------------------11', schools)
             if not schools.exists():
                 return Response('unable to delete', status=400)
@@ -279,77 +312,42 @@ class APIGrade(APIView):
         if act == 'create':
             # print('----------------------dfd', detail['names'])
             # 12/0
-            
-            #add protection
-            try:
-                for dict in detail:
-                    key_name = dict['name']
-                    key_description = dict['description']
-            except:
-                return Response('incorrect format', status=400)
 
             #get school
             schools = School.objects.filter(user=request.user)
-
+            if len(schools) != 1:
+                return Response('this user has no school', status=400)
+            school = schools.first()
             
-            # we can use schools.first or the method below
+            # python function as variable
+            if type(detail) != list:
+                return Response('not correct detail format', status=400)
 
-            # user has no school
-            if len(schools) == 1:
-                school = schools[0]
-            else:
-                return Response('user has no school', status=400)
+            for dat_dict in detail:
+                # check key is correct?
+                for key in dat_dict.keys():
+                    if key not in ['name', 'description']:
+                        return Response('incorrect format; you only create grade with "name" and "description";', status=400)
 
-            #set up 'grade_name'
-            for grade in detail: #grade = {'name': 'grade 1', 'description': 'this is description for grade 1'}
-                print('----------------------gr', grade) # grade = {'name': 'grade 1', 'description': 'this is description for grade 1'}
-                grade_name = grade['name'] #grade = {'name': 'grade 1', 'description': 'this is description for grade 1'} # grade_name = 'grade 1' 
-                print('---------------------------ss', grade_name) #grade = {'name': 'grade 1', 'description': 'this is description for grade 1'} #grade_name = 'grade 1'
-            #grade_name = 'grade 3'
-            #grade_name = 'grade 3'
-            #grade_name = 'grade 3'
+                # check duplicated
+                new_name = dat_dict['name']
+                grades = Grade.objects.filter(school__user=request.user, name=new_name)
+                if grades.exists():
+                    return Response('dup', status=400)
 
-            #check duplicated name            
-            # for name in grade_name: #grade = {'name': 'grade 3', 'description': 'this is description for grade 1'} # name = 'grade 3'
-                print('---------------------------g',grade_name)
-                query_names = Grade.objects.filter(name=grade_name, school__user=request.user)
-                # print('----------------------er', names)
-                # print('------------------------o', query_names)
-                if query_names.exists():
-                    return Response('duplicated name', status=400) #the loop end here after it loop through all the items input by the user
+                # add school pk to dictionary
+                dat_dict['school'] = school.pk
 
-            description = grade['description']
-            # print('--------------------------123', description)
+                # dicti = {
+                #     'name' : ....,
+                #     'description': ....,
+                #     'school': .....,
+                # }
             
-            objs = []
-            count = 0            
-            #make another loop with the same variables in order to make list of objects (with this, we don't have to worry about the value that is changed to 'grade 3' by the above loop)
-            for grade in detail:
-                grade_name = grade['name']
-                print('\n\n----------------------------',count)
-                print(count, '----name', grade_name)
-
-                obj = {
-                    'school': school.pk,
-
-                    'name': grade_name,
-                    'description': description,
-                }
-                # obj.update({
-                #     'school': school
-                # })
-
-                print(count, '---- obj', obj)
-                objs.append(obj)
-                print(count, '---- objs []', objs)
-                count += 1
-            # [{'school':pk_of_choull', 'name': 'grade1', 'description': 'des1'}, {'name': 'grade2', 'description': 'des2'}]
-            print('xxx--------------objs=',objs)
-
-            serializer = GradeSerializer(data=objs, many=True)
+            serializer = GradeSerializer(data=detail, many=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response('create %d success'%count, status=200)
+                return Response('create %d success'%len(detail), status=200)
             else:
                 return Response(serializer.errors, status=400)
 

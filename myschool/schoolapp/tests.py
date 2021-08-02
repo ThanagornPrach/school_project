@@ -1,3 +1,4 @@
+from os import name
 from django.http import response
 from django.test import TestCase, Client, tag
 from .models import *
@@ -54,6 +55,7 @@ class UserTest(TestCase):
     @tag('update_user')
     def test_update_user(self):
         obj = User.objects.create(username='user A', password='1234')
+        #to use the object above, we need to make a line that check whether it's still exists
 
         detail = {
             'username': 'B',
@@ -61,7 +63,7 @@ class UserTest(TestCase):
         }
         data = {
             'act': 'update',
-            'old username': str(obj.username),
+            # 'old username': str(obj.username),
             'detail': detail
         }
         response = self.client.post('/api/v1/user/', data, format='json')
@@ -199,6 +201,71 @@ class BasicTest(TestCase):
         # check old school
         objs = School.objects.filter(user=self.new_user, name='A')
         self.assertEqual(len(objs), 0)
+    
+    @tag('update_school_name')
+    def test_update_school_name(self):
+        School.objects.create(
+            name='A',
+            description='description A',
+            user=self.new_user,
+        )
+
+        detail = {
+            'name': 'B',
+        }
+
+        data = {
+            'act': 'update',
+            'detail': detail
+        }
+        
+        print('-----------------dd', detail.keys())
+        # if detail['description'] not in detail:
+        #     detail['description'].replace(detail['description'], '')
+        #     print('=-------------okok', detail['description'])
+        #     print('-------------------asd', detail)
+        # print('---------------------qwe', data)
+        response = self.client.post('/api/v1/school/', data, format='json')
+        print('===================1', response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'update success')
+
+        # objs = School.objects.filter(user=self.new_user)
+
+        new_name = School.objects.filter(name=detail['name'], user=self.new_user)
+        self.assertEqual(len(new_name), 1)
+        self.assertTrue(new_name.first().name == detail['name'])
+
+        objs = School.objects.filter(name='A', user=self.new_user)
+        self.assertEqual(len(objs), 0)
+    
+    @tag('update_school_description')
+    def test_update_school_description(self):
+        School.objects.create(
+            name='A',
+            description='this is school',
+            user=self.new_user)
+        
+        detail = {
+            'description': 'new school description'
+        }
+
+        data = {
+            'act': 'update',
+            'detail': detail
+        }
+
+        response = self.client.post('/api/v1/school/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'update success')
+
+        new_description = School.objects.filter(description=detail['description'], user=self.new_user)
+        self.assertEqual(len(new_description), 1)
+        # we can do as what below or we can just use 'assertTrue' so that we don't need 'True' at the end.
+        self.assertEqual(new_description.first().description == detail['description'], True)
+
+        old_description = School.objects.filter(description='this is school', user=self.new_user)
+        self.assertEqual(len(old_description), 0)
 
     @tag('duplicate_update_school')
     def test_update_duplicate_school(self):
@@ -293,7 +360,6 @@ class GradeTest(TestCase):
                 },
                 {
                     "name": "grade 2",
-                    "description": "this is description for grade 2"
                 },
                 {
                     "name": "grade 3",
@@ -303,28 +369,41 @@ class GradeTest(TestCase):
         }
         # print('--------------------ss', data['detail'])
 
-        count = 0 
-        for grade in data['detail']:
-            name = grade['name']
-            # description = grade['description']
-            # print('-----------g', grade)
-            # print('-----------n', name)
-            # print('------------d', description)
-            # print('xxxxxxxxxxxxxxx')
-            count += 1 
-        
         print('-------------------------------ww', data)
         response = self.client.post('/api/v1/grade/', data, format='json')
         print('------------------------aaa', response.data)
         self.assertEqual(response.status_code, 200)
         # print('------------------------------------')
-        self.assertEqual(response.data, 'create %d success'%count)
+        self.assertEqual(response.data, 'create %d success'%len(data['detail']))
 
         grades = Grade.objects.all() #since we let the user create list, we have to check every queryset as it of the user.
 
         # print('------------------------------aaaa', grades)
         self.assertEqual(len(grades), 3)
 
+    # @tag('create_grade_name')
+    # def test_create_grade_name(self):
+    #     data = {
+    #         'act': 'create',
+    #         'detail': [
+    #             {
+    #                 "name": "grade 1",
+    #             },
+    #             {
+    #                 "name": "grade 2",
+    #             },
+    #             {
+    #                 "name": "grade 3",
+    #             }
+    #         ]
+    #     }
+    #     response = self.client.post('/api/v1/grade/', data, format='json')
+    #     print('--------------------aaa', response.data)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(response.data, 'create success')
+
+    #     grade_name = Grade.objects.filter(name=data['detail'])
+    #     self.assertEqual(len(grade_name), 3)
     # @tag('create_grade')
     # def test_create_grade(self):
     #     grade_name = []

@@ -21,7 +21,6 @@ Post /api/v1/user/
 ```json
 {
     "act": "create",
-    "old username": "tom",
     "detail": {
         "username": "oom",
         "password": "1234"
@@ -62,12 +61,13 @@ POST /api/v1/school/
 {
     "act": "update",
     "detail": {
-        "school_pk": "1",
         "name": "school b",
         "description": "this is description"
     }
 }
 ```
+
+#
 
 # check school
 GET/ api/v1/school/
@@ -96,7 +96,6 @@ POST /api/v1/grade/
         },
         {
             "name": "grade 2",
-            "description": "this is description for grade 2"
         },
         {
             "name": "grade 3",

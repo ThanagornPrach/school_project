@@ -199,7 +199,37 @@
 # else:
 #     print('no transition point')
 
-a = 5
-for i in [3,7,9]:
-    a = i 
-print(a)
+# a = 5
+# for i in [3,7,9]:
+#     a = i 
+# print(a)
+
+# arr = {1, 8, 7, 56, 90}
+# # sorted(arr)
+# l = list(arr)
+# l.sort()
+
+# # sorted(arr)
+# print(l[-1])
+
+
+# def largest( arr, n):
+#     max = arr[0]
+    
+#     for i in arr:
+#         if i > max:
+#             max = i
+            
+#     return max
+
+# def test(arr, n, gt):
+#     ans = largest(arr, n)
+#     print('-----------',ans, gt)
+#     assert ans==gt
+
+# test([1,2,3,4,10,50,30], 7, 50)
+a = 1
+if a == 1:
+    print('in')
+else:
+    print('out')
