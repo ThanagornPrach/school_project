@@ -145,6 +145,17 @@ class BasicTest(TestCase):
     #     area = w * h
     #     return area
 
+    @tag('school_create_detail')
+    def test_school_create_detail(self):
+        data = {
+            'act':'create',
+            'detail': []
+        }
+
+        response = self.client.post('/api/v1/school/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(data['detail'] != dict)
+
     @tag('create_school')
     def test_create_school(self):
         data = {
@@ -163,6 +174,23 @@ class BasicTest(TestCase):
         # print('---------------------', schools.first().user)
         # user__username='test'
         self.assertEqual(len(schools), 1)
+    
+    @tag('create_school_name')
+    def test_create_school_name(self):
+        data = {
+            'act': 'create',
+            'detail': {
+                'name': 'school A'
+            }
+        }
+
+        response = self.client.post('/api/v1/school/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'create success')
+
+        school = School.objects.filter(name=data['detail']['name'], user=self.new_user)
+        self.assertEqual(len(school), 1)
+        self.assertTrue(school.first().name == 'school A')
 
     @tag('get_school')
     def test_get_school(self):
@@ -219,12 +247,6 @@ class BasicTest(TestCase):
             'detail': detail
         }
         
-        print('-----------------dd', detail.keys())
-        # if detail['description'] not in detail:
-        #     detail['description'].replace(detail['description'], '')
-        #     print('=-------------okok', detail['description'])
-        #     print('-------------------asd', detail)
-        # print('---------------------qwe', data)
         response = self.client.post('/api/v1/school/', data, format='json')
         print('===================1', response.data)
         self.assertEqual(response.status_code, 200)
@@ -269,7 +291,7 @@ class BasicTest(TestCase):
 
     @tag('duplicate_update_school')
     def test_update_duplicate_school(self):
-        obj = School.objects.create(name="A", description='description A', user=self.new_user)
+        School.objects.create(name="A", description='description A', user=self.new_user)
         
         detail = {
             'name': 'A',
@@ -277,7 +299,6 @@ class BasicTest(TestCase):
         }
         data = {
             'act': 'update',
-            'old name': str(obj.name),
             'detail': detail
         }
         response = self.client.post('/api/v1/school/', data, format='json')
@@ -495,7 +516,8 @@ class GradeTest(TestCase):
                 school=self.school,
                 name=grade_name)
             names.append(grade.pk)
-            print('----------------------io', names)
+            # print('============',grade)
+
         detail = [
             {
                 'pk': '1',
@@ -504,8 +526,7 @@ class GradeTest(TestCase):
             },
             {
                 'pk': '2',
-                'name': 'b',
-                'description': 'd for b'
+                'name': 'b'
             },
             {
                 'pk': '3',
@@ -525,19 +546,60 @@ class GradeTest(TestCase):
 
         #check updated grade
         name_list = [detail[0]['name'], detail[1]['name'], detail[2]['name']]
-        # print('--------------------ii',len(name_list))
+        print('--------------------ii',len(name_list))
         new_query_name = []
         for name in name_list:
-            # print('-----------------------------qwe', name)
-            updated_objs = Grade.objects.filter(name=name, school=self.school)
+            print('-----------------------------qwe', name)
+            updated_objs = Grade.objects.filter(name=name,school=self.school)
+            # updated_description = Grade.objects.filter(description=name, school=self.school)
             print('-----------------------uuu', updated_objs)
+            # print('----------------------dddd', updated_description)
             new_query_name.append(updated_objs)
             # print('--------------------', len(new_query_name))
         self.assertEqual(len(new_query_name), 3)
+        # self.assertEqual(len(updated_description), 1)
 
         #check old grade
         objs = Grade.objects.filter(name=grade_name, school=self.school)
         self.assertEqual(len(objs), 0)
+    
+    @tag('grade_update_description')
+
+    @tag('update_grade_format')
+    def test_update_grade_format(self):
+        name = []
+        for grade_name in ['c1','c2','c3']:
+            grade = Grade.objects.create(
+                name=grade_name,
+                school=self.school)
+            name.append(grade.pk)
+        
+        detail = [
+            {
+                'pk': '1',
+                'name': 'a',
+                'description': 'd for a'
+            },
+            {
+                'pk': '2',
+                'name': 'b'
+            },
+            {
+                'pk': '3',
+                'name': 'c',
+                'descriptions': 'd for c'
+            }
+        ]
+
+        data = {
+            'act': 'update',
+            'detail': detail
+        }
+
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'incorrect format')
+
     
     @tag('duplicate_update_grade')
     def test_duplicate_update_grade(self):

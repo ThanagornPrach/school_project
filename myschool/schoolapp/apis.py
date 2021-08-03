@@ -129,20 +129,31 @@ class APISchool(APIView):
         for k in ['act','detail']:
             if k not in data.keys():
                 return Response('failed, %s is required'%k, status=400)
+        
+        #latest change: 3/8
         if act == 'create':
+            #check detail format
+            if detail != dict:
+                return Response('incorrect detail fomat', status=400)
+
+            #bring user.pk
             detail.update({
                 'user':request.user.pk
             })
             
-            try:
-                name = detail['name']
-                description = detail['description']
-            except:
-                return Response('incorrect format', status=400)
+            #check user
+            user = User.objects.filter(username=request.user)
+            if len(user) != 1:
+                return Response('no user', status=400)
             
-            objs = School.objects.filter(name=name,description=description, user=request.user)
-            if objs.exists():
-                return Response ('duplicated school', status=400)
+            #check name and its duplication
+            if 'name' in detail:
+                name = detail['name']
+                objs = School.objects.filter(name=name, user=request.user)
+                if objs.exists():
+                    return Response ('duplicated school', status=400)
+            else:
+                return Response('incorrect format', status=400)
 
             print('------------------------sssss', detail)
             serializer = SchoolSerializer(data=detail, many=False)
@@ -308,6 +319,8 @@ class APIGrade(APIView):
         act = data.get('act')
         # print('-----------------ko',act)
         # 15/0
+
+        #latest change: 2/8
         detail = data.get('detail')
         if act == 'create':
             # print('----------------------dfd', detail['names'])
@@ -327,7 +340,7 @@ class APIGrade(APIView):
                 # check key is correct?
                 for key in dat_dict.keys():
                     if key not in ['name', 'description']:
-                        return Response('incorrect format; you only create grade with "name" and "description";', status=400)
+                        return Response('incorrect format; you only create grade with "name" or "description";', status=400)
 
                 # check duplicated
                 new_name = dat_dict['name']
@@ -353,14 +366,6 @@ class APIGrade(APIView):
 
 
         if act == 'update':
-
-            try:
-                for dict in detail:
-                    key_pk = dict['pk']
-                    key_name = dict['name']
-                    key_description = dict['description']
-            except:
-                return Response('incorrect format', status=400)
             # old_names = data['pk_names']
             # print('-----------------------jj', old_names)
             # new_names = detail['names']
@@ -381,11 +386,20 @@ class APIGrade(APIView):
             # new_name = detail
             # print('============================sss', new_name)
             
+            for dict in detail:
+                for key in dict.keys():
+                    if key not in ['name', 'description', 'pk']:
+                        return Response('incorrect format', status=400)
+            
+            print('-----------------detail',detail)
+
             new_names = []
             for dat in detail:
-                name = dat['name']
-                new_names.append(name)
-                print('-------------------------ert', new_names)
+                print('--------------------dat', dat)
+                if 'name' in dat:
+                    name = dat['name']
+                    new_names.append(name)
+                    print('-------------------------ert', new_names)
             db_objs = Grade.objects.filter(name__in=new_names, school__user=request.user)
             #use this technique to work with list
             print('----------------------------sdsdsd', db_objs)
@@ -394,12 +408,13 @@ class APIGrade(APIView):
             
 
             for dat in detail:
+                print('-----------------------dat ', dat)
                 pk = dat['pk']
                 print('============================as', pk)
                 grades = Grade.objects.filter(school__user=request.user, pk=pk)
                 if not grades.exists():
                     return Response('pk does not exist', status=400)
-
+            
                 if len(grades) == 1:
                     # traditional approach
                     # grades.update({
