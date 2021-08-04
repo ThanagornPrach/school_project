@@ -1,4 +1,5 @@
 from os import name
+from django.db.models import query
 from django.http import response
 from django.test import TestCase, Client, tag
 from .models import *
@@ -369,7 +370,7 @@ class GradeTest(TestCase):
         #     name = '1',
         #     description = 'description 1'
         # )
-    
+
     @tag('create_grade')
     def test_create_grade(self):
         data = {
@@ -508,6 +509,19 @@ class GradeTest(TestCase):
         response = self.client.post('/api/v1/grade/', data, format='json')
         self.assertEqual(response.status_code, 400)
     
+    @tag('grade_update_detail_list')
+    def test_grade_detail_list(self):
+        detail = {}
+
+        data = {
+            'act': 'update',
+            'detail': detail
+        }
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'incorrect detail format')
+        self.assertTrue(type(detail) != list)
+
     @tag('update_grade')
     def test_update_grade(self):
         names = []
@@ -563,7 +577,55 @@ class GradeTest(TestCase):
         objs = Grade.objects.filter(name=grade_name, school=self.school)
         self.assertEqual(len(objs), 0)
     
-    @tag('grade_update_description')
+    @tag('update_grade_description')
+    def test_update_grade_description(self):
+        description = []
+        for grade_description in ['d1','d2','d3']:
+            grade = Grade.objects.create(
+                description=grade_description,
+                school=self.school
+            )
+            description.append(grade.pk)
+        
+        detail = [
+            {
+                'pk': '1',
+                'description': 'des1'
+            },
+            {
+                'pk': '2',
+                'description': 'des2'
+            },
+            {
+                'pk': '3',
+                'description': 'des3'
+            }
+        ]
+
+        data = {
+            'act': 'update',
+            'detail': detail
+        }
+
+        response = self.client.post('/api/v1/grade/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, 'update %d success'%len(detail))
+        print('----------------------dadad', response.data)
+
+        #check updated description
+        list_des = []
+        for des in detail:
+            new_des = des['description']
+            # print('--------------sdsd', new_des)
+            query_new_des = Grade.objects.filter(description=new_des, school=self.school)
+            list_des.append(query_new_des)
+            # print('----------------------new', list_des)
+        self.assertEqual(len(list_des), 3)
+        
+
+        #check old description
+        old_query_des = Grade.objects.filter(description=grade_description, school=self.school)
+        self.assertEqual(len(old_query_des), 0)
 
     @tag('update_grade_format')
     def test_update_grade_format(self):
@@ -723,6 +785,27 @@ class StudentTest(TestCase):
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 400)
     
+    @tag('update_student_detail')
+    def test_update_student_detail(self):
+        obj = Student.objects.create(
+            first_name='F1',
+            last_name='L1',
+            nick_name='N1',
+            grade = self.grade
+        )
+
+        detail = []
+
+        data = {
+            'act': 'update',
+            'detail': detail
+        }
+
+        response = self.client.post('/api/v1/student/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, 'incorrect detail format', 400)
+        self.assertTrue(type(detail) != dict)
+    
     @tag('update_student')
     def test_update_student(self):
         obj = Student.objects.create(
@@ -742,18 +825,27 @@ class StudentTest(TestCase):
             'act': 'update',
             'detail': detail
         }
-        print('---------------------44', data)
+        
         response = self.client.post('/api/v1/student/', data, format='json')
         self.assertEqual(response.status_code, 200)
-        print('---------------------123', data)
+        print('---------------------123', response.data)
         self.assertEqual(response.data, 'update success')
 
 
-        updated_objs = Student.objects.filter(pk=obj.pk, first_name='F2', last_name='L2', nick_name='N2')
-        self.assertEqual(len(updated_objs), 1)
+        updated_first = Student.objects.filter(pk=obj.pk, first_name='F2', grade=self.grade)
+        self.assertEqual(len(updated_first), 1)
+        updated_last = Student.objects.filter(pk=obj.pk, last_name='L2', grade=self.grade)
+        self.assertEqual(len(updated_last), 1)
+        updated_nick = Student.objects.filter(pk=obj.pk, nick_name='N2', grade=self.grade)
+        self.assertEqual(len(updated_nick), 1)
 
-        objs = Student.objects.filter(pk=obj.pk, first_name='F1', last_name='L1', nick_name='N1')
-        self.assertEqual(len(objs), 0)
+
+        f_objs = Student.objects.filter(pk=obj.pk, first_name='F1', grade=self.grade)
+        self.assertEqual(len(f_objs), 0)
+        l_objs = Student.objects.filter(pk=obj.pk, last_name='L1', grade=self.grade)
+        self.assertEqual(len(l_objs), 0)
+        n_objs = Student.objects.filter(pk=obj.pk, nick_name='N1', grade=self.grade)
+        self.assertEqual(len(n_objs), 0)
 
     @tag('duplicate_update_student')
     def test_duplicate_update_student(self):
@@ -916,13 +1008,25 @@ class ParentTest(TestCase):
             'detail': detail
         }
         response = self.client.post('/api/v1/parent/', data, format='json')
+        print('-----------------------ss', response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
 
-        update_objs = Parent.objects.filter(pk=obj.pk, first_name='P2', last_name='L2')
-        self.assertEqual(len(update_objs), 1)
+        #check updated first_name
+        update_firstnames = Parent.objects.filter(pk=obj.pk, first_name='P2', director=self.new_user)
+        if len(update_firstnames) == 1:
+            self.assertEqual(len(update_firstnames), 1)
+        else:
+            self.assertEqual(len(update_firstnames), 0)
+        
+        #check updated last_name
+        update_lastnames = Parent.objects.filter(pk=obj.pk, last_name='L2', director=self.new_user)
+        if len(update_lastnames) == 1:
+            self.assertEqual(len(update_lastnames), 1)
+        else:
+            self.assertEqual(len(update_lastnames), 0)
 
-        objs = Parent.objects.filter(pk=obj.pk, first_name='P1', last_name='L1' )
+        objs = Parent.objects.filter(first_name='P1', last_name='L1', director=self.new_user)
         self.assertEqual(len(objs), 0)
 
     @tag('duplicate_update_parent')

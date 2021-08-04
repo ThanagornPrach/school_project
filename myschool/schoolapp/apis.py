@@ -1,5 +1,3 @@
-from os import name, path
-from unittest.case import skip
 from django.http import response
 from .serializers import *
 from rest_framework.views import APIView
@@ -385,7 +383,10 @@ class APIGrade(APIView):
             # check duplicate update
             # new_name = detail
             # print('============================sss', new_name)
-            
+
+            if type(detail) != list:
+                return Response('incorrect detail format', status=400)
+
             for dict in detail:
                 for key in dict.keys():
                     if key not in ['name', 'description', 'pk']:
@@ -428,7 +429,7 @@ class APIGrade(APIView):
                     # let's update 
                     grades.update(**dat)
 
-            return Response('update success', status=200)
+            return Response('update %d success'%len(detail), status=200)
             # grades = Grade.objects.filter(name=data['old names'], school__user=request.user)
             # # print('--------------------------------ssss',Grade.objects.filter(pk=data['pk'], school__user=request.user))
             # name = detail['names']
@@ -503,7 +504,11 @@ class APIStudent(APIView):
                 nick_name = detail['nick_name']
             except:
                 return Response('incorrect format', status=400)
-            objs = Student.objects.filter(first_name=first_name, last_name=last_name, nick_name=nick_name, grade__school__user=request.user)
+            objs = Student.objects.filter(
+                first_name=first_name, 
+                last_name=last_name, 
+                nick_name=nick_name, 
+                grade__school__user=request.user)
             if  objs.exists():
                 return Response('duplicated student', status=400)
 
@@ -516,38 +521,84 @@ class APIStudent(APIView):
                 return Response(serializer.errors, status=400)
     
         if act == 'update':
-            try:
-                student_pk = detail['student_pk']
-            except:
-                return Response('incorrect format', status=400)
-            print('-----------------------asd', student_pk)
-            students = Student.objects.filter(
-                pk=student_pk,
-                grade__school__user=request.user)
-            print('-------------------------pk', students)
-            if not students.exists():
-                return Response('no pk', status=400)
-            
-            #check duplicate and key
-            try:
-                first_name = detail['first_name']
-                last_name = detail['last_name']
-                nick_name = detail['nick_name']
-            except:
-                return Response('incorrect format', status=400)
-            objs = Student.objects.filter(
-                first_name=first_name, 
-                last_name=last_name, 
-                nick_name=nick_name, grade__school__user=request.user)
-            print('----------------------kgkgk')
-            if  objs.exists():
-                return Response('duplicated student', status=400)
+            #check detail format
+            if type(detail) != dict:
+                return Response('incorrect detail format', status=400)
 
-            del detail['student_pk']
+            #check whether the user spell them correctly, not to check if the user have them in the postman or not 
+            for key in detail:
+                print('---------------aa', key)
+                if key not in ['student_pk','first_name','last_name','nick_name']:
+                    return Response('incorrect format', status=400)
+
+            #check duplicated names
+            if 'first_name' in detail:
+                first_name = detail['first_name']
+                f_names = Student.objects.filter(first_name=first_name, grade__school__user=request.user)
+                if f_names.exists():
+                    return Response('duplicated first name', status=400)
+
+            if 'last_name' in detail:
+                last_name = detail['last_name']
+                l_names = Student.objects.filter(last_name=last_name, grade__school__user=request.user)
+                if l_names.exists():
+                    return Response('duplicated last name', status=400)
             
-            # update student
+            if 'nick_name' in detail:
+                nick_name = detail['nick_name']
+                n_names = Student.objects.filter(nick_name=nick_name, grade__school__user=request.user)
+                if n_names.exists():
+                    return Response('duplicated nick name', status=400)
+            
+            #pk must be in [detail]
+            if 'student_pk' in detail:
+                pk = detail['student_pk']
+            else:
+                return Response('student_pk has to be in [detail]', status=400)
+            
+            #check pk
+            students = Student.objects.filter(pk=pk, grade__school__user=request.user)
+            if not students.exists():
+                return Response('no student_pk', status=400)
+            
+            # updating
+            del detail['student_pk']
+
             students.update(**detail)
             return Response('update success', status=200)
+
+            # try:
+            #     student_pk = detail['student_pk']
+            # except:
+            #     return Response('incorrect format', status=400)
+            # print('-----------------------asd', student_pk)
+            # students = Student.objects.filter(
+            #     pk=student_pk,
+            #     grade__school__user=request.user)
+            # print('-------------------------pk', students)
+            # if not students.exists():
+            #     return Response('no pk', status=400)
+            
+            # #check duplicate and key
+            # try:
+            #     first_name = detail['first_name']
+            #     last_name = detail['last_name']
+            #     nick_name = detail['nick_name']
+            # except:
+            #     return Response('incorrect format', status=400)
+            # objs = Student.objects.filter(
+            #     first_name=first_name, 
+            #     last_name=last_name, 
+            #     nick_name=nick_name, grade__school__user=request.user)
+            # print('----------------------kgkgk')
+            # if  objs.exists():
+            #     return Response('duplicated student', status=400)
+
+            # del detail['student_pk']
+            
+            # # update student
+            # students.update(**detail)
+            # return Response('update success', status=200)
         
         if act == 'delete':
             student_pk = detail['student_pk']
@@ -587,6 +638,9 @@ class APIParent(APIView):
         act = data.get('act')
         detail = data.get('detail')
         if act == 'create':
+            if type(detail) != dict:
+                return Response('incorrect detail format', status=400)
+
             detail.update({
                 'director':request.user.pk
             })
@@ -600,15 +654,6 @@ class APIParent(APIView):
             if objs.exists():
                 return Response('duplicated parent', status=400)
             
-            #make another action --> create children
-            # # children_f = Student.objects.filter(first_name=detail['first_name'], last_name=detail['last_name'], nick_name=detail['nick_name'])
-            # childrens = Student(first_name=detail['first_name'], last_name=detail['last_name'], nick_name=detail['nick_name'])
-            # childrens.save()
-            
-            # p1 = Parent (first_name=first_name, last_name=last_name)
-            # p1.save()
-
-            # p1.children.add(childrens)
 
             serializer = ParentInSerializer(data=detail, many=False)
             if serializer.is_valid():
@@ -692,32 +737,81 @@ class APIParent(APIView):
             return Response('added %d child to parent'%count, status=200)
         
         if act == 'update':
-            try:
-                parent_pk = detail['parent_pk']
-            except:
-                return Response('incorrect format', status=400)
-            print('------------------------111', parent_pk)
-            this_user = request.user
-            parents = Parent.objects.filter(pk=parent_pk, director=this_user)
-            print('--------------------------dddd', parents)
-
-            #check duplicated update and key
-            try:
+            '''''
+            {
+                "act": "update",
+                "detail": {
+                    "parent_pk": "1",
+                    "first_name": "tom (this is new name [first_name])",
+                    "last_name": "tom-tom (this is new [last_name])"
+                }
+            }
+            '''''
+            for key in detail:
+                if key not in ['first_name','last_name','parent_pk']:
+                    return Response('incorrect format', status=400)
+            
+            if 'first_name' in detail:
                 first_name = detail['first_name']
+                f_name = Parent.objects.filter(first_name=first_name, director=request.user)
+                if f_name.exists():
+                    return Response('duplicated first name', status=400)
+            
+            if 'last_name' in detail:
                 last_name = detail['last_name']
-            except:
-                return Response('incorrect format', status=400)
-            objs = Parent.objects.filter(first_name=first_name, last_name=last_name, director=this_user)
-            if objs.exists():
-                return Response('duplicated parent', status=400)
+                l_name = Parent.objects.filter(last_name=last_name, director=request.user)
+                if l_name.exists():
+                    return Response('duplicated last name', status=400)
+            
+            # for name in detail:
+            #     if name in ['first_name', 'last_name']:
+            #         first_name = detail['first_name']
+            #         last_name = detail['last_name']
+            # names = Parent.objects.filter(
+            #     first_name=first_name,
+            #     last_name=last_name,
+            #     director=request.user)
+            # if names.exists():
+            #     return Response('duplicated %s'%name, status=400)
 
-        
+            if 'parent_pk' not in detail:
+                return Response('parent_pk must be in [detail]')
+            
+            pk = detail['parent_pk']
+            parents = Parent.objects.filter(pk=pk, director=request.user)
             if not parents.exists():
-                return Response('unable to update', status=400)
+                return Response('no parent_pk', status=400)
             
             del detail['parent_pk']
+
             parents.update(**detail)
             return Response('update success', status=200)
+            # try:
+            #     parent_pk = detail['parent_pk']
+            # except:
+            #     return Response('incorrect format', status=400)
+            # print('------------------------111', parent_pk)
+            # this_user = request.user
+            # parents = Parent.objects.filter(pk=parent_pk, director=this_user)
+            # print('--------------------------dddd', parents)
+
+            # #check duplicated update and key
+            # try:
+            #     first_name = detail['first_name']
+            #     last_name = detail['last_name']
+            # except:
+            #     return Response('incorrect format', status=400)
+            # objs = Parent.objects.filter(first_name=first_name, last_name=last_name, director=this_user)
+            # if objs.exists():
+            #     return Response('duplicated parent', status=400)
+
+        
+            # if not parents.exists():
+            #     return Response('unable to update', status=400)
+            
+            # del detail['parent_pk']
+            # parents.update(**detail)
+            # return Response('update success', status=200)
         
         if act == 'delete':
             this_user = request.user
