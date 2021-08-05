@@ -1,4 +1,4 @@
-from os import name
+#all I need are below
 from django.db.models import query
 from django.http import response
 from django.test import TestCase, Client, tag
@@ -17,7 +17,8 @@ class UserTest(TestCase):
         self.token = Token.objects.create(user=self.new_user)
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        User.objects.create(username='new_user')
+        
+        # User.objects.create(username='new_user')
     
     @tag('get_user')
     def test_get_user(self):
@@ -55,7 +56,7 @@ class UserTest(TestCase):
     
     @tag('update_user')
     def test_update_user(self):
-        obj = User.objects.create(username='user A', password='1234')
+        User.objects.create(username='user A', password='1234')
         #to use the object above, we need to make a line that check whether it's still exists
 
         detail = {
@@ -64,7 +65,6 @@ class UserTest(TestCase):
         }
         data = {
             'act': 'update',
-            # 'old username': str(obj.username),
             'detail': detail
         }
         response = self.client.post('/api/v1/user/', data, format='json')
@@ -82,11 +82,12 @@ class UserTest(TestCase):
         }
         data = {
             'act': 'update',
-            'old name': str(obj.username),
             'detail': detail
         }
         response = self.client.post('/api/v1/user/', data, format='json')
         self.assertEqual(response.status_code, 400)
+
+        
 
     @tag('delete_user')
     def test_delete_user(self):
@@ -148,14 +149,16 @@ class BasicTest(TestCase):
 
     @tag('school_create_detail')
     def test_school_create_detail(self):
+        detail = []
+
         data = {
             'act':'create',
-            'detail': []
+            'detail': detail
         }
 
         response = self.client.post('/api/v1/school/', data, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertTrue(data['detail'] != dict)
+        self.assertTrue(type(data['detail']) != dict)
 
     @tag('create_school')
     def test_create_school(self):
@@ -206,7 +209,7 @@ class BasicTest(TestCase):
         obj = School.objects.create(name='A', description='description A', user=self.new_user)
         
         detail = {
-            'school_pk': str(obj.pk),
+            # 'school_pk': str(obj.pk),
             'name':'G',
             'description': 'description G'
         }
@@ -217,6 +220,7 @@ class BasicTest(TestCase):
             }
         print('---------------------ss', data)
         response = self.client.post('/api/v1/school/', data, format='json')
+        print('--------------------re', response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, 'update success')
 
@@ -224,7 +228,7 @@ class BasicTest(TestCase):
         objs = School.objects.filter(user=self.new_user)
 
         # check new name of updated school
-        updated_objs = School.objects.filter(user=self.new_user, name='G', pk=data['detail']['school_pk'])
+        updated_objs = School.objects.filter(user=self.new_user, name='G')
         self.assertEqual(len(updated_objs), 1)
 
         # check old school
@@ -552,11 +556,13 @@ class GradeTest(TestCase):
             'act': 'update',
             'detail': detail
         }
-        # print('-------------------------qq', detail[0]['name'], detail[1]['name'], detail[2]['name'])
+
+        
+
         response = self.client.post('/api/v1/grade/', data, format='json')
         print('---------------------------dd',response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, 'update success')
+        self.assertEqual(response.data, 'update %d success'%len(detail))
 
         #check updated grade
         name_list = [detail[0]['name'], detail[1]['name'], detail[2]['name']]
@@ -1181,6 +1187,6 @@ class ParentTest(TestCase):
         }
         response = self.client.post('/api/v1/parent/', data, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, 'failed, action is required')
+        self.assertEqual(response.data, 'failed, act is required')
     
     

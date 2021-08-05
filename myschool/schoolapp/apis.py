@@ -44,32 +44,29 @@ class APIUser(APIView):
             # if serialzer.is_valid():
             #     serialzer.save()
             return Response('create success', status=200)
-            # else:
-            #     return Response(serialzer.errors, status=400) 
-
-            # new_user = User.objects.create_user(username='username', password='password')
-            # new_user.save()
-            # return Response('create success', status=200)
         
         if act == 'update':
             this_user = request.user
             users = User.objects.filter(username=this_user)
-
-            try:
-                username = detail['username']
-                password = detail['password']
-                # old_name = data['old username']
-            except:
-                return Response('incorrect format', status=400)
             
-            objs = User.objects.filter(username=username, user=this_user)
+            if type(detail) != dict:
+                return Response('incorrect format', status=400)
+
+            for key in detail:
+                if key not in ['username','password']:
+                    return Response('incorrect format', status=400)
+            
+            username = detail['username']
+            
+            objs = User.objects.filter(username=username)
+            print('-----------------obf', objs)
             if objs.exists():
-                return Response('duplicated update', status=400)
+                return Response('duplicated username', status=400)
             
             if not users.exists():
                 return Response('unable to update', status=400)
             
-            users.update(**request.data['detail'])
+            users.update(**detail)
             return Response('update success', status=200)
         
         if act == 'delete':
@@ -131,8 +128,8 @@ class APISchool(APIView):
         #latest change: 3/8
         if act == 'create':
             #check detail format
-            if detail != dict:
-                return Response('incorrect detail fomat', status=400)
+            if type(detail) != dict:
+                return Response('incorrect detail format', status=400)
 
             #bring user.pk
             detail.update({
@@ -164,14 +161,19 @@ class APISchool(APIView):
         if act == 'update':
             try:
                 # check duplicated name
+                print('---------------------d',detail)
                 if 'name' in detail:
+                    print('--------------------')
                     name = detail['name']
                     objs = School.objects.filter(user=request.user, name=name)
                     if objs.exists():
                         return Response('duplicated name! you cannot use this name', status=400)
 
-                objs = School.objects.filter(user=request.user)
-                objs.update(**detail)   
+                schools = School.objects.filter(user=request.user)
+                if not schools.exists():
+                    return Response('no school')
+                print('-----------------sss', detail)
+                schools.update(**detail) 
                 return Response('update success', status=200)
             except:
                 return Response('incorrect format', status=400)
@@ -531,24 +533,50 @@ class APIStudent(APIView):
                 if key not in ['student_pk','first_name','last_name','nick_name']:
                     return Response('incorrect format', status=400)
 
-            #check duplicated names
-            if 'first_name' in detail:
-                first_name = detail['first_name']
-                f_names = Student.objects.filter(first_name=first_name, grade__school__user=request.user)
-                if f_names.exists():
-                    return Response('duplicated first name', status=400)
+            '''''
+                {
+                    "act": "update",
+                    "detail": {
+                        "student_pk": "1",
+                        "first_name": "bom",
+                        "last_name": "bomus",
+                        "nick_name": "bom-bom"
+                    }
+                }
+            '''''
 
-            if 'last_name' in detail:
-                last_name = detail['last_name']
-                l_names = Student.objects.filter(last_name=last_name, grade__school__user=request.user)
-                if l_names.exists():
-                    return Response('duplicated last name', status=400)
+            for name in detail:
+                if name not in ['first_name','last_name','nick_name']:
+                    return Response('incorrect %s'%name, status=400)
+                # first_name =  
+                # names = Student.objects.filter(**students)
+
+            # check duplicated names
+            # if 'first_name' in detail:
+            #     first_name = detail['first_name']
+            #     f_names = Student.objects.filter(first_name=first_name, grade__school__user=request.user)
+            #     if f_names.exists():
+            #         return Response('duplicated first name', status=400)
+
+            # if 'last_name' in detail:
+            #     last_name = detail['last_name']
+            #     l_names = Student.objects.filter(last_name=last_name, grade__school__user=request.user)
+            #     if l_names.exists():
+            #         return Response('duplicated last name', status=400)
             
-            if 'nick_name' in detail:
-                nick_name = detail['nick_name']
-                n_names = Student.objects.filter(nick_name=nick_name, grade__school__user=request.user)
-                if n_names.exists():
-                    return Response('duplicated nick name', status=400)
+            # if 'nick_name' in detail:
+            #     nick_name = detail['nick_name']
+            #     n_names = Student.objects.filter(nick_name=nick_name, grade__school__user=request.user)
+            #     if n_names.exists():
+            #         return Response('duplicated nick name', status=400)
+
+            # names = Student.objects.filter(
+            #     first_name=first_name,
+            #     last_name=last_name,
+            #     nick_name=nick_name,
+            #     grade__school__user=request.user)
+            # if names.exists():
+            #     return Response('duplicated name')
             
             #pk must be in [detail]
             if 'student_pk' in detail:
@@ -696,11 +724,13 @@ class APIParent(APIView):
                     "children_pk": [{"pk":"1"}, {"pk":"17"}, {"pk": "10"}]
                 }
             }
-            '''
+            ''' 
+            if type(detail) != dict:
+                return Response('incorrect detail format', status=400)
 
             try:
-                parent_pk = data['detail']['parent_pk']
-                children_pk = data['detail']['children_pk']
+                parent_pk = detail['parent_pk']
+                children_pk = detail['children_pk']
                 try:
                     parent_pk = int(parent_pk)
                 except:
@@ -715,6 +745,9 @@ class APIParent(APIView):
             parent = parents.first()
             
             # check children is ready
+            if type(children_pk) != list:
+                return Response('incorrect children_pk format', status=400)
+
             ready_children = []
             for child in children_pk:
                 try:
@@ -747,6 +780,9 @@ class APIParent(APIView):
                 }
             }
             '''''
+            if type(detail) != dict:
+                return Response('incorrect detail format', status=400)
+
             for key in detail:
                 if key not in ['first_name','last_name','parent_pk']:
                     return Response('incorrect format', status=400)
@@ -775,7 +811,7 @@ class APIParent(APIView):
             #     return Response('duplicated %s'%name, status=400)
 
             if 'parent_pk' not in detail:
-                return Response('parent_pk must be in [detail]')
+                return Response('parent_pk must be in [detail]', status=400)
             
             pk = detail['parent_pk']
             parents = Parent.objects.filter(pk=pk, director=request.user)
