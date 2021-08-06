@@ -475,8 +475,8 @@ class APIStudent(APIView):
     def get (self, request):
         # data = request.GET.dict()
         objs = Student.objects.filter(grade__school__user=request.user)
-        obj = objs.first()
-        serializer = StudentSerializer(obj, many=False)
+        # obj = objs.first()
+        serializer = StudentSerializer(objs, many=True)
         return Response(serializer.data, status=200)
     
     def post (self, request):
@@ -529,7 +529,6 @@ class APIStudent(APIView):
 
             #check whether the user spell them correctly, not to check if the user have them in the postman or not 
             for key in detail:
-                print('---------------aa', key)
                 if key not in ['student_pk','first_name','last_name','nick_name']:
                     return Response('incorrect format', status=400)
 
@@ -544,46 +543,23 @@ class APIStudent(APIView):
                     }
                 }
             '''''
-
-            for name in detail:
-                if name not in ['first_name','last_name','nick_name']:
-                    return Response('incorrect %s'%name, status=400)
-                # first_name =  
-                # names = Student.objects.filter(**students)
-
-            # check duplicated names
-            # if 'first_name' in detail:
-            #     first_name = detail['first_name']
-            #     f_names = Student.objects.filter(first_name=first_name, grade__school__user=request.user)
-            #     if f_names.exists():
-            #         return Response('duplicated first name', status=400)
-
-            # if 'last_name' in detail:
-            #     last_name = detail['last_name']
-            #     l_names = Student.objects.filter(last_name=last_name, grade__school__user=request.user)
-            #     if l_names.exists():
-            #         return Response('duplicated last name', status=400)
             
-            # if 'nick_name' in detail:
-            #     nick_name = detail['nick_name']
-            #     n_names = Student.objects.filter(nick_name=nick_name, grade__school__user=request.user)
-            #     if n_names.exists():
-            #         return Response('duplicated nick name', status=400)
-
-            # names = Student.objects.filter(
-            #     first_name=first_name,
-            #     last_name=last_name,
-            #     nick_name=nick_name,
-            #     grade__school__user=request.user)
-            # if names.exists():
-            #     return Response('duplicated name')
+            if 'first_name' in detail and 'last_name' in detail:
+                first_name = detail['first_name']
+                last_name = detail['last_name']
+                
+                students = Student.objects.filter(
+                    first_name=first_name, 
+                    last_name=last_name,
+                    grade__school__user=request.user)
+                if students.exists():
+                    return Response('unable to apply first name and last name due to the names already existed', status=400)
             
             #pk must be in [detail]
             if 'student_pk' in detail:
                 pk = detail['student_pk']
             else:
                 return Response('student_pk has to be in [detail]', status=400)
-            
             #check pk
             students = Student.objects.filter(pk=pk, grade__school__user=request.user)
             if not students.exists():

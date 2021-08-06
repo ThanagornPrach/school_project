@@ -1,4 +1,5 @@
 from django.db.models import fields
+from django.db.models.query import prefetch_related_objects
 from rest_framework import serializers
 from .models import *
 
@@ -37,6 +38,13 @@ class GradeSerializer(serializers.ModelSerializer):
 
         
 class StudentSerializer(serializers.ModelSerializer):
+    # def parent(self, obj):
+    #     # lst = [obj]
+    #     # parents = Parent.objects.filter(children__in=lst)
+    #     # parent = parents.first()
+    #     # return 
+    #     return 'hi'
+    parent = serializers.ReadOnlyField()
     class Meta:
         model = Student
         # fields = ['first_name', 'last_name', 'nick_name']

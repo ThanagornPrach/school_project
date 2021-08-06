@@ -837,21 +837,34 @@ class StudentTest(TestCase):
         print('---------------------123', response.data)
         self.assertEqual(response.data, 'update success')
 
+        # check new name
+        if 'first_name' in data['detail']:
+            new_firstnames = Student.objects.filter(
+                first_name=data['detail']['first_name'],
+                grade=self.grade)
+            self.assertEqual(len(new_firstnames), 1)
+        
+        
+        if 'last_name' in data['detail']:
+            new_lastnames = Student.objects.filter(
+                last_name=data['detail']['last_name'],
+                grade=self.grade)
+            self.assertEqual(len(new_lastnames), 1)
+        
+        if 'nick_name' in data['detail']:
+            new_nickname = Student.objects.filter(
+                nick_name=data['detail']['nick_name'],
+                grade=self.grade)
+            self.assertEqual(len(new_nickname), 1)
+        
+        # check old name
+        students = Student.objects.filter(
+            first_name='F1',
+            last_name='L1',
+            nick_name='N1',
+            grade=self.grade)
+        self.assertEqual(len(students), 0)
 
-        updated_first = Student.objects.filter(pk=obj.pk, first_name='F2', grade=self.grade)
-        self.assertEqual(len(updated_first), 1)
-        updated_last = Student.objects.filter(pk=obj.pk, last_name='L2', grade=self.grade)
-        self.assertEqual(len(updated_last), 1)
-        updated_nick = Student.objects.filter(pk=obj.pk, nick_name='N2', grade=self.grade)
-        self.assertEqual(len(updated_nick), 1)
-
-
-        f_objs = Student.objects.filter(pk=obj.pk, first_name='F1', grade=self.grade)
-        self.assertEqual(len(f_objs), 0)
-        l_objs = Student.objects.filter(pk=obj.pk, last_name='L1', grade=self.grade)
-        self.assertEqual(len(l_objs), 0)
-        n_objs = Student.objects.filter(pk=obj.pk, nick_name='N1', grade=self.grade)
-        self.assertEqual(len(n_objs), 0)
 
     @tag('duplicate_update_student')
     def test_duplicate_update_student(self):

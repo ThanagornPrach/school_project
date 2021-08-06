@@ -89,6 +89,16 @@ class Student(models.Model):
     nick_name = models.CharField(max_length=125, null=True)
     def __str__(self):
         return '%s - %s - %s ' % (self.first_name, self.last_name, self.nick_name)
+    
+    def parent(self):
+        parents = Parent.objects.filter(children__in=[self])
+        if not parents.exists():
+            return None
+        parent = parents.first()
+        first_name = parent.first_name
+        last_name = parent.last_name
+        return first_name +' '+ last_name
+        
 
 class Parent(models.Model):
     director = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
